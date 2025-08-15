@@ -1,0 +1,254 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:plant_application/models/accessory_data.dart';
+import 'package:plant_application/models/repot_data.dart';
+import 'package:plant_application/models/water_event_data.dart';
+import 'package:plant_application/providers/home_screen_providers.dart';
+import 'package:plant_application/screens/add_watering/add_watering_screen.dart';
+import 'package:plant_application/screens/add_watering/watering_form_data.dart';
+
+class EventSection<T> extends StatefulWidget {
+  const EventSection({
+    super.key,
+    required this.events,
+    required this.formatDate,
+    required this.plantId,
+    required this.title,
+  });
+
+  final List<dynamic> events;
+  final String Function(DateTime) formatDate;
+  final int plantId;
+  final String title;
+
+  @override
+  State<EventSection<T>> createState() => _EventSectionState<T>();
+}
+
+class _EventSectionState<T> extends State<EventSection<T>> {
+  final Set<int> expandedEventIds = {};
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Fixed title header that doesn't scroll
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(widget.title, style: Theme.of(context).textTheme.titleLarge),
+            ],
+          ),
+        ),
+
+        // Scrollable list content
+        SizedBox(
+          height: 200,
+          child:
+              widget.events.isEmpty
+                  ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32.0),
+                      child: Text('No events'),
+                    ),
+                  )
+                  : ListView.builder(
+                    itemCount: widget.events.length,
+                    itemBuilder: (context, index) {
+                      final event = widget.events[index];
+                      /*
+                      if (event is WaterEventData) {
+                        final form = WateringFormData(
+                          plantId: widget.plantId,
+                          date: event.date,
+                          timing: event.timingFeedback,
+                          daysToCorrect: event.offsetDays,
+                          notes: event.notes,
+                          );
+                      }
+*/
+                      final eventId =
+                          (event != null && (event.id is int))
+                              ? (event.id as int)
+                              : index;
+                      final date =
+                          (event != null && event.date is DateTime)
+                              ? (event.date as DateTime)
+                              : DateTime.now();
+                      final daysBetween =
+                          (event is WaterEventData || event is RepotData)
+                              ? event.daysSinceLast
+                              : null;
+                      final isExpanded = expandedEventIds.contains(eventId);
+
+                      return Container(
+                        key: ValueKey('event-$eventId'),
+                        child: Column(
+                          children: [
+                            ListTile(
+                              title: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(widget.formatDate(date)),
+                                  (daysBetween != null)
+                                      ? Text('$daysBetween days')
+                                      : const Text(''),
+                                  const SizedBox(width: 12),
+                                ],
+                              ),
+                              trailing: IconButton(
+                                icon: Icon(
+                                  isExpanded
+                                      ? Icons.expand_less
+                                      : Icons.expand_more,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    if (isExpanded) {
+                                      expandedEventIds.remove(eventId);
+                                    } else {
+                                      expandedEventIds.add(eventId);
+                                    }
+                                  });
+                                },
+                              ),
+                            ),
+                            if (isExpanded)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // const Text(
+                                    //   'Accessories:',
+                                    //   style: TextStyle(
+                                    //     fontWeight: FontWeight.bold,
+                                    //   ),
+                                    // ),
+                                    Consumer(
+                                      builder: (context, ref, _) {
+                                        final accessoriesAsync = ref.watch(
+                                          accessoriesForEventProvider(eventId),
+                                        );
+
+                                        return accessoriesAsync.when(
+                                          data: (accessories) {
+                                            if (accessories.isEmpty) {
+                                              return const Text(
+                                                'No accessories',
+                                              );
+                                            }
+                                            return Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: _buildAccessoryWidgets(
+                                                accessories,
+                                                event.runtimeType,
+                                              ),
+                                            );
+                                          },
+                                          loading:
+                                              () => const Padding(
+                                                padding: EdgeInsets.all(8.0),
+                                                child: SizedBox(
+                                                  height: 20,
+                                                  width: 20,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                      ),
+                                                ),
+                                              ),
+                                          error:
+                                              (e, st) => Text(
+                                                'Error loading accessories: $e',
+                                              ),
+                                        );
+                                      },
+                                    ),
+                                    if (event is RepotData) ...[
+                                      Text("Pot size: ${event.potSize}"),
+                                      Text("Soil Type: ${event.soilType}"),
+                                    ],
+                                    if (event != null &&
+                                        event.notes != null &&
+                                        (event.notes as String).isNotEmpty)
+                                      Text("notes: ${event.notes}"),
+                                  ],
+                                ),
+                              ),
+                            const Divider(height: 1),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+        ),
+        TextButton.icon(
+          icon: const Icon(Icons.add),
+          label: Text("Add Event"),
+          onPressed: () {
+            if (widget.title == "Watering History") {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AddWateringScreen(plantId: widget.plantId),
+                ),
+              );
+            }
+          },
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildAccessoryWidgets(
+    List<AccessoryData> accessories,
+    Type eventType,
+  ) {
+    // Repot events → no accessories shown at all
+    if (eventType == RepotData) {
+      return [SizedBox.shrink()];
+    }
+
+    final List<AccessoryData> waterList =
+        accessories.where((a) => a.type == 'watering').toList();
+
+    final Iterable<AccessoryData> fertilizerList = accessories.where(
+      (a) => a.type == 'fertilizer',
+    );
+    final Iterable<AccessoryData> pesticideList = accessories.where(
+      (a) => a.type == 'pesticide',
+    );
+    final List<Widget> list = [];
+    if (waterList.isNotEmpty) {
+      list.add(
+        Row(
+          // mainAxisAlignment: MainAxisAlignment.center,
+          children: [Text("Water Type: "), Text(waterList[0].name)],
+        ),
+      );
+      // list.addAll(waterList.map((w) => Text(w.name)));
+    }
+    if (fertilizerList.isNotEmpty) {
+      list.add(Text("Fertilizers: "));
+      list.addAll(
+        fertilizerList.map(
+          (f) => Text(
+            '${f.name}${(f.strength != null) ? ' (${f.strength}%)' : ''}',
+          ),
+        ),
+      );
+    }
+    if (pesticideList.isNotEmpty) {
+      list.add(Text("Pesticides: "));
+      list.addAll(pesticideList.map((p) => Text(p.name)));
+    }
+    return list;
+  }
+}

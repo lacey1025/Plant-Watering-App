@@ -1,0 +1,11 @@
+o Make settings for photo banner dismissal
+o tabs for the home page
+  - manage water and fertilizers
+o maybe a photo gallery where you can add photos of all plants - not just by id
+o add repot events
+o add pesticide events
+o delete event
+o undo option for delete plant/event
+
+BUGS:
+
