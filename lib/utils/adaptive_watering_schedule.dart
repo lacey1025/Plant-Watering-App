@@ -7,7 +7,6 @@ import 'package:plant_application/database/plant_app_db.dart';
 import 'package:plant_application/models/plant_card_data.dart';
 import 'package:plant_application/models/water_event_data.dart';
 import 'package:plant_application/providers/db_provider.dart';
-import 'package:plant_application/providers/home_screen_providers.dart';
 import 'package:plant_application/screens/add_watering/watering_form_data.dart';
 
 class AdaptiveWateringSchedule {
@@ -68,58 +67,6 @@ class AdaptiveWateringSchedule {
     }
   }
 
-  // Reverts the schedule by undoing the most recent feedback update
-  void revertLastUpdate(double actualDays, Timing feedback, int offsetDays) {
-    if (totalFeedback == 0) return; // Nothing to revert
-
-    totalFeedback--;
-    double learningRate =
-        1.0 / sqrt(totalFeedback + 1); // Original learning rate
-
-    switch (feedback) {
-      case Timing.justRight:
-        positiveFeedback--;
-        // Reverse the lerp adjustments
-        double targetMin = actualDays * 0.95;
-        double targetMax = actualDays * 1.05;
-        minSuccessfulDays = _reverseLerp(
-          minSuccessfulDays,
-          targetMin,
-          learningRate,
-        );
-        maxSuccessfulDays = _reverseLerp(
-          maxSuccessfulDays,
-          targetMax,
-          learningRate,
-        );
-        break;
-
-      case Timing.early:
-        double targetMax = actualDays + offsetDays;
-        maxSuccessfulDays = _reverseLerp(
-          maxSuccessfulDays,
-          targetMax,
-          learningRate * 0.5,
-        );
-        break;
-
-      case Timing.late:
-        double targetMin = actualDays - offsetDays;
-        double targetMax = actualDays;
-        minSuccessfulDays = _reverseLerp(
-          minSuccessfulDays,
-          targetMin,
-          learningRate,
-        );
-        maxSuccessfulDays = _reverseLerp(
-          maxSuccessfulDays,
-          targetMax,
-          learningRate * 0.3,
-        );
-        break;
-    }
-  }
-
   /// Recalculates the entire schedule from scratch using a list of events
   void recalculateSchedule(
     List<WaterEventData> events,
@@ -155,17 +102,24 @@ class AdaptiveWateringSchedule {
   static Future<void> adjustPlantSchedule(
     int eventId,
     PlantCardData plant,
-    Ref ref,
+    dynamic ref,
   ) async {
+    if (ref is! WidgetRef && ref is! Ref) {
+      return;
+    }
+
     final db = ref.read(databaseProvider);
-    final events = await ref.read(
-      wateringEventsForPlantProvider(plant.plant.id).future,
-    );
+    final List<WaterEventData> events =
+        await db.eventsDao.watchWateringEventsForPlant(plant.plant.id).first;
+
     if (!plant.plant.inWateringSchedule ||
         plant.plant.minWateringDays == null ||
         plant.plant.maxWateringDays == null) {
       return;
     }
+    final sortedEvents =
+        events.toList()..sort((a, b) => a.date.compareTo(b.date));
+
     late AdaptiveWateringSchedule schedule;
     if (plant.schedule == null) {
       schedule = AdaptiveWateringSchedule(
@@ -177,13 +131,11 @@ class AdaptiveWateringSchedule {
     } else {
       schedule = plant.schedule!;
     }
-
     schedule.recalculateSchedule(
-      events,
+      sortedEvents,
       plant.plant.minWateringDays!.toDouble(),
       plant.plant.maxWateringDays!.toDouble(),
     );
-
     await db.plantsDao.updatePlantFromCompanion(
       plant.plant.id,
       PlantsCompanion(
@@ -193,11 +145,5 @@ class AdaptiveWateringSchedule {
         positiveFeedback: Value(schedule.positiveFeedback),
       ),
     );
-  }
-
-  /// Helper method to reverse a lerp operation
-  double _reverseLerp(double current, double target, double t) {
-    if (t == 0) return current;
-    return (current - target * t) / (1 - t);
   }
 }

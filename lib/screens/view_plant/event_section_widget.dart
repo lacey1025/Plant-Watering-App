@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/models/accessory_data.dart';
 import 'package:plant_application/models/repot_data.dart';
 import 'package:plant_application/models/water_event_data.dart';
+import 'package:plant_application/providers/db_provider.dart';
 import 'package:plant_application/providers/home_screen_providers.dart';
 import 'package:plant_application/screens/add_watering/add_watering_screen.dart';
 import 'package:plant_application/screens/add_watering/watering_form_data.dart';
+import 'package:plant_application/utils/adaptive_watering_schedule.dart';
 
 class EventSection<T> extends ConsumerStatefulWidget {
   const EventSection({
@@ -49,13 +51,23 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
       isEdit: true,
       eventId: event.id,
     );
-
+    expandedEventIds.clear();
     Navigator.of(context).push(
       MaterialPageRoute(
         builder:
             (_) => AddWateringScreen(plantId: widget.plantId, editData: form),
       ),
     );
+  }
+
+  void _deleteEvent(int eventId) async {
+    final db = ref.read(databaseProvider);
+    await db.eventsDao.deleteWaterEvents([eventId]);
+    await db.eventsDao.deleteEvent(eventId);
+    final plants = await ref.read(plantCardsProvider.future);
+    final plant = plants.where((p) => p.plant.id == widget.plantId).firstOrNull;
+    if (plant == null) return;
+    await AdaptiveWateringSchedule.adjustPlantSchedule(eventId, plant, ref);
   }
 
   @override
@@ -151,39 +163,46 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
                                     //   ),
                                     // ),
                                     Consumer(
-                                      builder: (context, ref, _) {
-                                        final accessoriesAsync = ref.watch(
-                                          accessoriesForEventProvider(eventId),
-                                        );
+                                      builder: (context, widgetRef, _) {
+                                        final accessoriesAsync = widgetRef
+                                            .watch(
+                                              accessoriesForEventProvider(
+                                                eventId,
+                                              ),
+                                            );
 
                                         return accessoriesAsync.when(
                                           data: (accessories) {
-                                            if (accessories.isEmpty) {
-                                              return const Text(
-                                                'No accessories',
-                                              );
-                                            }
+                                            // if (accessories.isEmpty) {
+                                            //   return const Text(
+                                            //     'No accessories',
+                                            //   );
+                                            // }
                                             return Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                ..._buildAccessoryWidgets(
-                                                  accessories,
-                                                  event.runtimeType,
-                                                ),
-                                                if (event is RepotData) ...[
-                                                  Text(
-                                                    "Pot size: ${event.potSize}",
+                                                if (accessories.isNotEmpty) ...[
+                                                  ..._buildAccessoryWidgets(
+                                                    accessories,
+                                                    event.runtimeType,
                                                   ),
-                                                  Text(
-                                                    "Soil Type: ${event.soilType}",
-                                                  ),
+                                                  if (event is RepotData) ...[
+                                                    Text(
+                                                      "Pot size: ${event.potSize}",
+                                                    ),
+                                                    Text(
+                                                      "Soil Type: ${event.soilType}",
+                                                    ),
+                                                  ],
+                                                  if (event != null &&
+                                                      event.notes != null &&
+                                                      (event.notes as String)
+                                                          .isNotEmpty)
+                                                    Text(
+                                                      "notes: ${event.notes}",
+                                                    ),
                                                 ],
-                                                if (event != null &&
-                                                    event.notes != null &&
-                                                    (event.notes as String)
-                                                        .isNotEmpty)
-                                                  Text("notes: ${event.notes}"),
                                                 Row(
                                                   mainAxisAlignment:
                                                       MainAxisAlignment
@@ -199,7 +218,9 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
                                                       icon: Icon(Icons.edit),
                                                     ),
                                                     IconButton(
-                                                      onPressed: () {},
+                                                      onPressed: () {
+                                                        _deleteEvent(eventId);
+                                                      },
                                                       icon: Icon(Icons.delete),
                                                     ),
                                                   ],
@@ -241,6 +262,9 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
           label: Text("Add Event"),
           onPressed: () {
             if (widget.title == "Watering History") {
+              setState(() {
+                expandedEventIds.clear();
+              });
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => AddWateringScreen(plantId: widget.plantId),

@@ -89,12 +89,13 @@ class WateringFormNotifier extends StateNotifier<WateringFormData> {
       await submitEdit();
       return;
     }
+    late int wateringEventId;
     try {
       final db = ref.watch(databaseProvider);
       final wateringEventCompanion = state.toWateringEventCompanion();
 
       await db.transaction(() async {
-        final wateringEventId = await db.eventsDao.insertEvent(
+        wateringEventId = await db.eventsDao.insertEvent(
           wateringEventCompanion,
         );
         final waterCompanion = state.toEventsCompanionWater(wateringEventId);
@@ -111,12 +112,11 @@ class WateringFormNotifier extends StateNotifier<WateringFormData> {
           final repotCompanion = state.toRepotEventCompanion(eventIdRepot);
           await db.eventsDao.insertRepotEvent(repotCompanion);
         }
-        await _updateFrequency();
       });
+      await _updateFrequency(wateringEventId);
     } catch (error) {
       print(error);
     }
-    state = WateringFormData(plantId: plantId);
   }
 
   Future<void> submitEdit() async {
@@ -153,54 +153,67 @@ class WateringFormNotifier extends StateNotifier<WateringFormData> {
       print(error);
     }
     final plantAsync = ref.watch(plantNotifierProvider(plantId));
-    plantAsync.whenData((plant) {
-      if (plant == null) return;
-      AdaptiveWateringSchedule.adjustPlantSchedule(state.eventId!, plant, ref);
-    });
+    if (!plantAsync.hasValue || plantAsync.value == null) {
+      return;
+    }
 
-    state = WateringFormData(plantId: plantId);
+    final plant = plantAsync.value;
+    if (plant == null) return;
+    await AdaptiveWateringSchedule.adjustPlantSchedule(
+      state.eventId!,
+      plant,
+      ref,
+    );
   }
 
-  Future<void> _updateFrequency() async {
+  Future<void> _updateFrequency(int eventId) async {
     final plantAsync = ref.watch(plantNotifierProvider(plantId));
-    plantAsync.whenData((plant) async {
-      if (plant == null ||
-          !plant.plant.inWateringSchedule ||
-          plant.plant.minWateringDays == null ||
-          plant.plant.maxWateringDays == null) {
-        return;
-      }
-      final lastWateredDate =
-          plant.lastWatered ?? dateStringToDateTime(plant.plant.dateAdded);
-      final daysSinceLast = state.date.difference(lastWateredDate).inDays;
+    if (!plantAsync.hasValue || plantAsync.value == null) {
+      return; // or handle loading/error states as needed
+    }
 
-      late AdaptiveWateringSchedule schedule;
-      if (plant.schedule == null) {
-        schedule = AdaptiveWateringSchedule(
-          minSuccessfulDays: plant.plant.minWateringDays!,
-          maxSuccessfulDays: plant.plant.maxWateringDays!,
-          totalFeedback: plant.plant.totalFeedback,
-          positiveFeedback: plant.plant.positiveFeedback,
-        );
-      } else {
-        schedule = plant.schedule!;
-      }
-      schedule.updateSchedule(
-        daysSinceLast,
-        state.timing,
-        state.daysToCorrect.abs(),
+    final plant = plantAsync.value;
+    if (plant == null ||
+        !plant.plant.inWateringSchedule ||
+        plant.plant.minWateringDays == null ||
+        plant.plant.maxWateringDays == null) {
+      return;
+    }
+    final lastWateredDate =
+        plant.lastWatered ?? dateStringToDateTime(plant.plant.dateAdded);
+
+    if (lastWateredDate.isAfter(state.date)) {
+      await AdaptiveWateringSchedule.adjustPlantSchedule(eventId, plant, ref);
+      return;
+    }
+    final daysSinceLast = state.date.difference(lastWateredDate).inDays;
+
+    late AdaptiveWateringSchedule schedule;
+    if (plant.schedule == null) {
+      schedule = AdaptiveWateringSchedule(
+        minSuccessfulDays: plant.plant.minWateringDays!,
+        maxSuccessfulDays: plant.plant.maxWateringDays!,
+        totalFeedback: plant.plant.totalFeedback,
+        positiveFeedback: plant.plant.positiveFeedback,
       );
-      final db = ref.read(databaseProvider);
-      await db.plantsDao.updatePlantFromCompanion(
-        plantId,
-        PlantsCompanion(
-          minWateringDays: Value(schedule.minSuccessfulDays),
-          maxWateringDays: Value(schedule.maxSuccessfulDays),
-          totalFeedback: Value(schedule.totalFeedback),
-          positiveFeedback: Value(schedule.positiveFeedback),
-        ),
-      );
-    });
+    } else {
+      schedule = plant.schedule!;
+    }
+    schedule.updateSchedule(
+      daysSinceLast,
+      state.timing,
+      state.daysToCorrect.abs(),
+    );
+    final db = ref.read(databaseProvider);
+    await db.plantsDao.updatePlantFromCompanion(
+      plantId,
+      PlantsCompanion(
+        minWateringDays: Value(schedule.minSuccessfulDays),
+        maxWateringDays: Value(schedule.maxSuccessfulDays),
+        totalFeedback: Value(schedule.totalFeedback),
+        positiveFeedback: Value(schedule.positiveFeedback),
+      ),
+    );
   }
 
   // Future<void> deleteEvent(int eventId, PlantCardData plant) async {
