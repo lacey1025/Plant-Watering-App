@@ -2,10 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/database/converters.dart';
 import 'package:plant_application/database/plant_app_db.dart';
-import 'package:plant_application/models/plant_card_data.dart';
-import 'package:plant_application/models/water_event_data.dart';
 import 'package:plant_application/providers/db_provider.dart';
-import 'package:plant_application/providers/home_screen_providers.dart';
 import 'package:plant_application/providers/plant_provider.dart';
 import 'package:plant_application/screens/add_watering/watering_form_data.dart';
 import 'package:plant_application/utils/adaptive_watering_schedule.dart';
@@ -16,6 +13,10 @@ class WateringFormNotifier extends StateNotifier<WateringFormData> {
 
   WateringFormNotifier(this.ref, this.plantId)
     : super(WateringFormData(plantId: plantId));
+
+  void loadForEdit(WateringFormData existingData) {
+    state = existingData;
+  }
 
   void updateDate(DateTime value) {
     state = state.copyWith(date: value);
@@ -84,6 +85,10 @@ class WateringFormNotifier extends StateNotifier<WateringFormData> {
   }
 
   Future<void> submitForm() async {
+    if (state.isEdit) {
+      await submitEdit();
+      return;
+    }
     try {
       final db = ref.watch(databaseProvider);
       final wateringEventCompanion = state.toWateringEventCompanion();
@@ -111,6 +116,48 @@ class WateringFormNotifier extends StateNotifier<WateringFormData> {
     } catch (error) {
       print(error);
     }
+    state = WateringFormData(plantId: plantId);
+  }
+
+  Future<void> submitEdit() async {
+    if (state.eventId == null) return;
+    try {
+      final db = ref.watch(databaseProvider);
+      final wateringEventCompanion = EventsCompanion(
+        date: Value(dateTimeToDateString(state.date)),
+        notes: Value(state.notes),
+      );
+
+      await db.transaction(() async {
+        await db.eventsDao.updateEventFromCompanion(
+          state.eventId!,
+          wateringEventCompanion,
+        );
+        final waterCompanion = WaterEventsCompanion(
+          timingFeedback: Value(timingToString(state.timing)),
+          offsetDays: Value(state.daysToCorrect),
+        );
+        await db.eventsDao.updateWaterEventFromCompanion(
+          state.eventId!,
+          waterCompanion,
+        );
+        final eventAccessories = state.toEventAccessoriesCompanionList(
+          state.eventId!,
+        );
+        await db.accessoriesDao.deleteEventAccessoriesByEvents([
+          state.eventId!,
+        ]);
+        await db.accessoriesDao.insertEventAccessories(eventAccessories);
+      });
+    } catch (error) {
+      print(error);
+    }
+    final plantAsync = ref.watch(plantNotifierProvider(plantId));
+    plantAsync.whenData((plant) {
+      if (plant == null) return;
+      AdaptiveWateringSchedule.adjustPlantSchedule(state.eventId!, plant, ref);
+    });
+
     state = WateringFormData(plantId: plantId);
   }
 

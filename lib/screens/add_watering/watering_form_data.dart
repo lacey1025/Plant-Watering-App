@@ -39,6 +39,8 @@ class WateringFormData {
   final String notes;
   final String repotNotes;
   final bool isRepot;
+  final bool isEdit;
+  final int? eventId;
 
   WateringFormData({
     required this.plantId,
@@ -52,8 +54,27 @@ class WateringFormData {
     this.notes = '',
     this.repotNotes = '',
     this.isRepot = false,
+    this.isEdit = false,
+    this.eventId,
   }) : fertilizers = fertilizers ?? {},
        date = date ?? DateTime.now();
+
+  WateringFormData.forEdit({
+    required this.plantId,
+    DateTime? date,
+    this.waterTypeId,
+    this.timing = Timing.justRight,
+    this.daysToCorrect = 0,
+    Set<FertilizerData>? fertilizers,
+    this.potSize = 6,
+    this.soilType = '',
+    this.notes = '',
+    this.repotNotes = '',
+    this.isRepot = false,
+    required this.eventId,
+  }) : fertilizers = fertilizers ?? {},
+       date = date ?? DateTime.now(),
+       isEdit = true;
 
   static const _unset = Object();
 
@@ -86,6 +107,8 @@ class WateringFormData {
       notes: notes ?? this.notes,
       repotNotes: repotNotes ?? this.repotNotes,
       isRepot: isRepot ?? this.isRepot,
+      isEdit: isEdit,
+      eventId: eventId,
     );
   }
 

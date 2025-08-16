@@ -9,7 +9,7 @@ class AccessoriesDao extends DatabaseAccessor<PlantAppDb>
     with _$AccessoriesDaoMixin {
   AccessoriesDao(super.db);
 
-  Future<List<AccessoryData>> getAccessoriesForEvent(int eventId) async {
+  Stream<List<AccessoryData>> watchAccessoriesForEvent(int eventId) {
     final query = select(eventAccessories).join([
       innerJoin(
         accessories,
@@ -19,11 +19,12 @@ class AccessoriesDao extends DatabaseAccessor<PlantAppDb>
 
     return query.map((row) {
       return AccessoryData(
+        id: row.readTable(accessories).id,
         type: row.readTable(accessories).type,
         name: row.readTable(accessories).name,
         strength: row.readTable(eventAccessories).strength,
       );
-    }).get();
+    }).watch(); // Changed from .get() to .watch()
   }
 
   Stream<List<Accessory>> watchAllActiveAccessories() {

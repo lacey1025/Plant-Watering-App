@@ -7,7 +7,7 @@ import 'package:plant_application/providers/home_screen_providers.dart';
 import 'package:plant_application/screens/add_watering/add_watering_screen.dart';
 import 'package:plant_application/screens/add_watering/watering_form_data.dart';
 
-class EventSection<T> extends StatefulWidget {
+class EventSection<T> extends ConsumerStatefulWidget {
   const EventSection({
     super.key,
     required this.events,
@@ -22,11 +22,41 @@ class EventSection<T> extends StatefulWidget {
   final String title;
 
   @override
-  State<EventSection<T>> createState() => _EventSectionState<T>();
+  ConsumerState<EventSection<T>> createState() => _EventSectionState<T>();
 }
 
-class _EventSectionState<T> extends State<EventSection<T>> {
+class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
   final Set<int> expandedEventIds = {};
+
+  void _editEvent(WaterEventData event, List<AccessoryData> accessories) async {
+    final fertilizers =
+        accessories.map((a) {
+          if (a.type == 'fertilizer') {
+            return FertilizerData(accessoryId: a.id, strength: a.strength ?? 1);
+          }
+        }).toSet();
+    final waterId =
+        accessories.where((a) => a.type == "watering").firstOrNull?.id;
+
+    final form = WateringFormData(
+      plantId: widget.plantId,
+      waterTypeId: waterId,
+      fertilizers: fertilizers.whereType<FertilizerData>().toSet(),
+      date: event.date,
+      timing: event.timingFeedback ?? Timing.justRight,
+      daysToCorrect: event.offsetDays ?? 0,
+      notes: event.notes ?? '',
+      isEdit: true,
+      eventId: event.id,
+    );
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder:
+            (_) => AddWateringScreen(plantId: widget.plantId, editData: form),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,17 +88,6 @@ class _EventSectionState<T> extends State<EventSection<T>> {
                     itemCount: widget.events.length,
                     itemBuilder: (context, index) {
                       final event = widget.events[index];
-                      /*
-                      if (event is WaterEventData) {
-                        final form = WateringFormData(
-                          plantId: widget.plantId,
-                          date: event.date,
-                          timing: event.timingFeedback,
-                          daysToCorrect: event.offsetDays,
-                          notes: event.notes,
-                          );
-                      }
-*/
                       final eventId =
                           (event != null && (event.id is int))
                               ? (event.id as int)
@@ -147,10 +166,45 @@ class _EventSectionState<T> extends State<EventSection<T>> {
                                             return Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
-                                              children: _buildAccessoryWidgets(
-                                                accessories,
-                                                event.runtimeType,
-                                              ),
+                                              children: [
+                                                ..._buildAccessoryWidgets(
+                                                  accessories,
+                                                  event.runtimeType,
+                                                ),
+                                                if (event is RepotData) ...[
+                                                  Text(
+                                                    "Pot size: ${event.potSize}",
+                                                  ),
+                                                  Text(
+                                                    "Soil Type: ${event.soilType}",
+                                                  ),
+                                                ],
+                                                if (event != null &&
+                                                    event.notes != null &&
+                                                    (event.notes as String)
+                                                        .isNotEmpty)
+                                                  Text("notes: ${event.notes}"),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceAround,
+                                                  children: [
+                                                    IconButton(
+                                                      onPressed: () {
+                                                        _editEvent(
+                                                          event,
+                                                          accessories,
+                                                        );
+                                                      },
+                                                      icon: Icon(Icons.edit),
+                                                    ),
+                                                    IconButton(
+                                                      onPressed: () {},
+                                                      icon: Icon(Icons.delete),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
                                             );
                                           },
                                           loading:
@@ -172,14 +226,6 @@ class _EventSectionState<T> extends State<EventSection<T>> {
                                         );
                                       },
                                     ),
-                                    if (event is RepotData) ...[
-                                      Text("Pot size: ${event.potSize}"),
-                                      Text("Soil Type: ${event.soilType}"),
-                                    ],
-                                    if (event != null &&
-                                        event.notes != null &&
-                                        (event.notes as String).isNotEmpty)
-                                      Text("notes: ${event.notes}"),
                                   ],
                                 ),
                               ),

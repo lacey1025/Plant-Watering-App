@@ -109,6 +109,22 @@ class EventsDao extends DatabaseAccessor<PlantAppDb> with _$EventsDaoMixin {
     await (delete(events)..where((e) => e.id.equals(eventId))).go();
   }
 
+  Future<void> updateEventFromCompanion(
+    int eventId,
+    EventsCompanion updates,
+  ) async {
+    await (update(events)
+      ..where((tbl) => tbl.id.equals(eventId))).write(updates);
+  }
+
+  Future<void> updateWaterEventFromCompanion(
+    int eventId,
+    WaterEventsCompanion updates,
+  ) async {
+    await (update(waterEvents)
+      ..where((tbl) => tbl.eventId.equals(eventId))).write(updates);
+  }
+
   Future<void> deleteRepotEvents(List<int> eventIds) async {
     await (delete(repotEvents)..where((r) => r.eventId.isIn(eventIds))).go();
   }

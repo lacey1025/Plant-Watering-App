@@ -135,14 +135,8 @@ final pesticideEventsForPlantProvider = StreamProvider.family
       return db.eventsDao.watchPesticideEventsForPlant(plantId);
     });
 
-// final photosForPlantProvider = StreamProvider.family
-//     .autoDispose<List<Photo>, int>((ref, plantId) {
-//       final db = ref.watch(databaseProvider);
-//       return db.photosDao.watchAllPhotosForPlant(plantId);
-//     });
-
-final accessoriesForEventProvider = FutureProvider.family
-    .autoDispose<List<AccessoryData>, int>((ref, eventId) async {
+final accessoriesForEventProvider = StreamProvider.family
+    .autoDispose<List<AccessoryData>, int>((ref, eventId) {
       final db = ref.watch(databaseProvider);
-      return db.accessoriesDao.getAccessoriesForEvent(eventId);
+      return db.accessoriesDao.watchAccessoriesForEvent(eventId);
     });

@@ -1,28 +1,34 @@
-import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:plant_application/database/plant_app_db.dart';
 import 'package:plant_application/models/event_types_enum.dart';
-import 'package:plant_application/models/plant_card_data.dart';
 import 'package:plant_application/providers/accessories_provider.dart';
-import 'package:plant_application/providers/db_provider.dart';
-import 'package:plant_application/providers/home_screen_providers.dart';
 import 'package:plant_application/screens/add_watering/add_accessory_dialog.dart';
 import 'package:plant_application/screens/add_watering/watering_form_data.dart';
 import 'package:plant_application/screens/add_watering/watering_form_notifier.dart';
-import 'package:plant_application/utils/adaptive_watering_schedule.dart';
 
 class AddWateringScreen extends ConsumerStatefulWidget {
-  const AddWateringScreen({super.key, required this.plantId});
+  const AddWateringScreen({super.key, required this.plantId, this.editData});
 
   final int plantId;
+  final WateringFormData? editData;
 
   @override
   ConsumerState<AddWateringScreen> createState() => _AddWateringScreenState();
 }
 
 class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
-  final List<String> fertilizers = ["NPK", "Compost Tea", "Seaweed Extract"];
+  @override
+  void initState() {
+    super.initState();
+    if (widget.editData != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final notifier = ref.read(
+          wateringFormProvider(widget.plantId).notifier,
+        );
+        notifier.loadForEdit(widget.editData!);
+      });
+    }
+  }
 
   Future<void> _pickDate(BuildContext context) async {
     final provider = wateringFormProvider(widget.plantId);
@@ -38,48 +44,6 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
     if (picked != null && picked != form.date) {
       notifier.updateDate(picked);
     }
-  }
-
-  Future<void> deleteEvent(int eventId, PlantCardData plant) async {
-    final db = ref.read(databaseProvider);
-    db.eventsDao.deleteWaterEvents([eventId]);
-    db.eventsDao.deleteEvent(eventId);
-
-    final events = await ref.read(
-      wateringEventsForPlantProvider(plant.plant.id).future,
-    );
-    if (!plant.plant.inWateringSchedule ||
-        plant.plant.minWateringDays == null ||
-        plant.plant.maxWateringDays == null) {
-      return;
-    }
-    late AdaptiveWateringSchedule schedule;
-    if (plant.schedule == null) {
-      schedule = AdaptiveWateringSchedule(
-        minSuccessfulDays: plant.plant.minWateringDays!.toDouble(),
-        maxSuccessfulDays: plant.plant.maxWateringDays!.toDouble(),
-        totalFeedback: 0,
-        positiveFeedback: 0,
-      );
-    } else {
-      schedule = plant.schedule!;
-    }
-
-    schedule.recalculateSchedule(
-      events,
-      plant.plant.minWateringDays!.toDouble(),
-      plant.plant.maxWateringDays!.toDouble(),
-    );
-
-    await db.plantsDao.updatePlantFromCompanion(
-      plant.plant.id,
-      PlantsCompanion(
-        minWateringDays: Value(schedule.minSuccessfulDays),
-        maxWateringDays: Value(schedule.maxSuccessfulDays),
-        totalFeedback: Value(schedule.totalFeedback),
-        positiveFeedback: Value(schedule.positiveFeedback),
-      ),
-    );
   }
 
   double interval = 0.25;
@@ -493,49 +457,53 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
             ),
             const SizedBox(height: 20),
             // Repot switch
-            SwitchListTile(
-              title: const Text(
-                "Did you repot?",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              value: form.isRepot,
-              onChanged: (val) {
-                notifier.updateIsRepot(val);
-                _repotNotesController.clear();
-                _potSizeController.clear();
-                _soilTypeController.clear();
-              },
-            ),
-            if (form.isRepot) ...[
-              const SizedBox(height: 10),
-              Form(
-                key: _formKey,
-                child: TextFormField(
-                  decoration: const InputDecoration(labelText: "Pot Size (cm)"),
-                  keyboardType: TextInputType.number,
-                  controller: _potSizeController,
-                  validator: (value) {
-                    if (form.isRepot) {
-                      if (value == null) {
-                        return 'Please enter a pot size';
-                      }
-                      final potSize = int.tryParse(_potSizeController.text);
-                      if (potSize == null) {
-                        return 'Please ensure pot size is a number without a decimal';
-                      }
-                    }
-                    return null;
-                  },
+            if (!form.isEdit) ...[
+              SwitchListTile(
+                title: const Text(
+                  "Did you repot?",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
+                value: form.isRepot,
+                onChanged: (val) {
+                  notifier.updateIsRepot(val);
+                  _repotNotesController.clear();
+                  _potSizeController.clear();
+                  _soilTypeController.clear();
+                },
               ),
-              TextFormField(
-                decoration: const InputDecoration(labelText: "Soil Type"),
-                controller: _soilTypeController,
-              ),
-              TextFormField(
-                decoration: const InputDecoration(labelText: "Notes"),
-                controller: _repotNotesController,
-              ),
+              if (form.isRepot) ...[
+                const SizedBox(height: 10),
+                Form(
+                  key: _formKey,
+                  child: TextFormField(
+                    decoration: const InputDecoration(
+                      labelText: "Pot Size (cm)",
+                    ),
+                    keyboardType: TextInputType.number,
+                    controller: _potSizeController,
+                    validator: (value) {
+                      if (form.isRepot) {
+                        if (value == null) {
+                          return 'Please enter a pot size';
+                        }
+                        final potSize = int.tryParse(_potSizeController.text);
+                        if (potSize == null) {
+                          return 'Please ensure pot size is a number without a decimal';
+                        }
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                TextFormField(
+                  decoration: const InputDecoration(labelText: "Soil Type"),
+                  controller: _soilTypeController,
+                ),
+                TextFormField(
+                  decoration: const InputDecoration(labelText: "Notes"),
+                  controller: _repotNotesController,
+                ),
+              ],
             ],
 
             const SizedBox(height: 30),
@@ -547,7 +515,7 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                 ElevatedButton.icon(
                   icon: const Icon(Icons.check),
                   label: const Text("Submit"),
-                  onPressed: () {
+                  onPressed: () async {
                     if (form.isRepot) {
                       final validate = _formKey.currentState?.validate();
                       if (validate == null || validate == false) return;
@@ -571,8 +539,11 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                       notifier.updateRepotNotes(_repotNotesController.text);
                     }
 
-                    notifier.submitForm();
-                    Navigator.pop(context);
+                    await notifier.submitForm();
+
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
                   },
                 ),
                 OutlinedButton.icon(

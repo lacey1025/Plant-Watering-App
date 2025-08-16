@@ -1,7 +1,13 @@
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:drift/drift.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:plant_application/database/plant_app_db.dart';
+import 'package:plant_application/models/plant_card_data.dart';
 import 'package:plant_application/models/water_event_data.dart';
+import 'package:plant_application/providers/db_provider.dart';
+import 'package:plant_application/providers/home_screen_providers.dart';
 import 'package:plant_application/screens/add_watering/watering_form_data.dart';
 
 class AdaptiveWateringSchedule {
@@ -144,6 +150,49 @@ class AdaptiveWateringSchedule {
         updateSchedule(actualDays, event.timingFeedback!, event.offsetDays!);
       }
     }
+  }
+
+  static Future<void> adjustPlantSchedule(
+    int eventId,
+    PlantCardData plant,
+    Ref ref,
+  ) async {
+    final db = ref.read(databaseProvider);
+    final events = await ref.read(
+      wateringEventsForPlantProvider(plant.plant.id).future,
+    );
+    if (!plant.plant.inWateringSchedule ||
+        plant.plant.minWateringDays == null ||
+        plant.plant.maxWateringDays == null) {
+      return;
+    }
+    late AdaptiveWateringSchedule schedule;
+    if (plant.schedule == null) {
+      schedule = AdaptiveWateringSchedule(
+        minSuccessfulDays: plant.plant.minWateringDays!.toDouble(),
+        maxSuccessfulDays: plant.plant.maxWateringDays!.toDouble(),
+        totalFeedback: 0,
+        positiveFeedback: 0,
+      );
+    } else {
+      schedule = plant.schedule!;
+    }
+
+    schedule.recalculateSchedule(
+      events,
+      plant.plant.minWateringDays!.toDouble(),
+      plant.plant.maxWateringDays!.toDouble(),
+    );
+
+    await db.plantsDao.updatePlantFromCompanion(
+      plant.plant.id,
+      PlantsCompanion(
+        minWateringDays: Value(schedule.minSuccessfulDays),
+        maxWateringDays: Value(schedule.maxSuccessfulDays),
+        totalFeedback: Value(schedule.totalFeedback),
+        positiveFeedback: Value(schedule.positiveFeedback),
+      ),
+    );
   }
 
   /// Helper method to reverse a lerp operation
