@@ -16,7 +16,6 @@ class AdaptiveWateringSchedule {
   int positiveFeedback; // "Just right" feedback count
 
   int get frequency => (minSuccessfulDays + maxSuccessfulDays) ~/ 2;
-  // int get windowSize => max(1, (maxSuccessfulDays - minSuccessfulDays) ~/ 2);
   double get confidence => positiveFeedback / max(1, totalFeedback);
 
   AdaptiveWateringSchedule({
@@ -27,6 +26,9 @@ class AdaptiveWateringSchedule {
   });
 
   void updateSchedule(int actualDays, Timing feedback, int offsetDays) {
+    if (feedback == Timing.notSure) {
+      return;
+    }
     totalFeedback++;
 
     double learningRate =
@@ -63,6 +65,8 @@ class AdaptiveWateringSchedule {
         // Also adjust max down slightly
         maxSuccessfulDays =
             lerpDouble(maxSuccessfulDays, actualDays, learningRate * 0.3)!;
+        break;
+      case Timing.notSure:
         break;
     }
   }

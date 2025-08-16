@@ -24,6 +24,8 @@ Timing? stringToTiming(String? timing) {
       return Timing.justRight;
     case "late":
       return Timing.late;
+    case "not sure":
+      return Timing.notSure;
     default:
       return null;
   }
@@ -39,5 +41,7 @@ String? timingToString(Timing? timing) {
       return "just right";
     case Timing.late:
       return "late";
+    case Timing.notSure:
+      return "not sure";
   }
 }

@@ -5,7 +5,8 @@ import 'package:plant_application/database/plant_app_db.dart';
 enum Timing {
   early,
   justRight,
-  late;
+  late,
+  notSure;
 
   @override
   String toString() {
@@ -16,6 +17,8 @@ enum Timing {
         return 'Just right';
       case Timing.late:
         return 'Too late';
+      case Timing.notSure:
+        return 'Not sure';
     }
   }
 }
