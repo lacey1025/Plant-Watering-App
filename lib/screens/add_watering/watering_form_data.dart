@@ -1,8 +1,9 @@
 import 'package:drift/drift.dart';
-import 'package:plant_application/database/converters.dart';
 import 'package:plant_application/database/plant_app_db.dart';
+import 'package:plant_application/models/event_types_enum.dart';
 import 'package:plant_application/models/fertilizer_data.dart';
 import 'package:plant_application/models/timing_enum.dart';
+import 'package:plant_application/utils/datetime_extensions.dart';
 
 class WateringFormData {
   final int plantId;
@@ -92,8 +93,8 @@ class WateringFormData {
   EventsCompanion toWateringEventCompanion() {
     return EventsCompanion(
       plantId: Value(plantId),
-      eventType: Value('watering'),
-      date: Value(dateTimeToDateString(date)),
+      eventType: Value(EventType.watering.toString()),
+      date: Value(date.dateTimeToDateString()),
       notes: (notes.isEmpty) ? Value.absent() : Value(notes),
     );
   }
@@ -101,7 +102,7 @@ class WateringFormData {
   WaterEventsCompanion toEventsCompanionWater(int eventId) {
     return WaterEventsCompanion(
       eventId: Value(eventId),
-      timingFeedback: Value(timingToString(timing)),
+      timingFeedback: Value(timing.timingToString()),
       offsetDays: Value(daysToCorrect.abs()),
     );
   }
@@ -109,8 +110,8 @@ class WateringFormData {
   EventsCompanion toEventCompanionRepot() {
     return EventsCompanion(
       plantId: Value(plantId),
-      eventType: Value('repot'),
-      date: Value(dateTimeToDateString(date)),
+      eventType: Value(EventType.repot.toString()),
+      date: Value(date.dateTimeToDateString()),
       notes: (repotNotes.isEmpty) ? Value.absent() : Value(repotNotes),
     );
   }

@@ -1,6 +1,5 @@
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:plant_application/database/converters.dart';
 import 'package:plant_application/database/plant_app_db.dart';
 import 'package:plant_application/models/fertilizer_data.dart';
 import 'package:plant_application/models/timing_enum.dart';
@@ -8,6 +7,7 @@ import 'package:plant_application/providers/db_provider.dart';
 import 'package:plant_application/providers/plant_provider.dart';
 import 'package:plant_application/screens/add_watering/watering_form_data.dart';
 import 'package:plant_application/utils/adaptive_watering_schedule.dart';
+import 'package:plant_application/utils/datetime_extensions.dart';
 
 class WateringFormNotifier extends StateNotifier<WateringFormData> {
   final Ref ref;
@@ -126,7 +126,7 @@ class WateringFormNotifier extends StateNotifier<WateringFormData> {
     try {
       final db = ref.watch(databaseProvider);
       final wateringEventCompanion = EventsCompanion(
-        date: Value(dateTimeToDateString(state.date)),
+        date: Value(state.date.dateTimeToDateString()),
         notes: Value(state.notes),
       );
 
@@ -136,7 +136,7 @@ class WateringFormNotifier extends StateNotifier<WateringFormData> {
           wateringEventCompanion,
         );
         final waterCompanion = WaterEventsCompanion(
-          timingFeedback: Value(timingToString(state.timing)),
+          timingFeedback: Value(state.timing.timingToString()),
           offsetDays: Value(state.daysToCorrect),
         );
         await db.eventsDao.updateWaterEventFromCompanion(
@@ -182,7 +182,8 @@ class WateringFormNotifier extends StateNotifier<WateringFormData> {
       return;
     }
     final lastWateredDate =
-        plant.lastWatered ?? dateStringToDateTime(plant.plant.dateAdded);
+        plant.lastWatered ??
+        DateTimeHelpers.dateStringToDateTime(plant.plant.dateAdded);
 
     if (lastWateredDate.isAfter(state.date)) {
       await AdaptiveWateringSchedule.adjustPlantSchedule(eventId, plant, ref);

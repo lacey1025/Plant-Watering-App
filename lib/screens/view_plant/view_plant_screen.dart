@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:plant_application/database/converters.dart';
 import 'package:plant_application/database/plant_app_db.dart';
+import 'package:plant_application/models/event_types_enum.dart';
 import 'package:plant_application/models/repot_data.dart';
 import 'package:plant_application/models/water_event_data.dart';
 import 'package:plant_application/providers/home_screen_providers.dart';
@@ -13,6 +13,7 @@ import 'package:plant_application/screens/view_plant/banner_widget.dart';
 import 'package:plant_application/screens/view_plant/event_section_widget.dart';
 import 'package:plant_application/screens/view_plant/photo_reminder_banner.dart';
 import 'package:plant_application/screens/view_plant/plant_app_bar.dart';
+import 'package:plant_application/utils/datetime_extensions.dart';
 
 class ViewPlant extends ConsumerStatefulWidget {
   final int plantId;
@@ -127,6 +128,7 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
                             plantId: plant.plant.id,
                             events: events,
                             formatDate: formatDate,
+                            eventType: EventType.watering,
                           ),
                         );
                       },
@@ -146,6 +148,7 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
                             plantId: plant.plant.id,
                             events: events,
                             formatDate: formatDate,
+                            eventType: EventType.repot,
                           ),
                         );
                       },
@@ -163,6 +166,7 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
                           plantId: plant.plant.id,
                           events: events,
                           formatDate: formatDate,
+                          eventType: EventType.pesticide,
                         );
                       },
                       loading:
@@ -188,7 +192,9 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
               mainAxisSize: MainAxisSize.min,
               children: [
                 PhotoReminderBanner(
-                  dateAdded: dateStringToDateTime(plant.plant.dateAdded),
+                  dateAdded: DateTimeHelpers.dateStringToDateTime(
+                    plant.plant.dateAdded,
+                  ),
                   plantId: plant.plant.id,
                 ),
                 const SizedBox(height: 8),

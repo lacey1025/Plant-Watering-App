@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:plant_application/database/converters.dart';
 import 'package:plant_application/database/plant_app_db.dart';
+import 'package:plant_application/utils/datetime_extensions.dart';
 
 class PlantFormData {
   final int? id;
@@ -56,7 +56,7 @@ class PlantFormData {
       // wateringFrequency: Value(intFrequency),
       inWateringSchedule: Value(inSchedule),
       notes: Value(notes),
-      dateAdded: Value(dateTimeToDateString(DateTime.now())),
+      dateAdded: Value(DateTime.now().dateTimeToDateString()),
       minWateringDays: Value(intFrequency * 0.9), // 10% buffer below
       maxWateringDays: Value(intFrequency * 1.1), // 10% buffer above
       totalFeedback: Value(0),
@@ -71,7 +71,7 @@ class PlantFormData {
       // wateringFrequency: Value(intFrequency),
       inWateringSchedule: Value(inSchedule),
       notes: Value(notes),
-      dateAdded: Value(dateTimeToDateString(DateTime.now())),
+      dateAdded: Value(DateTime.now().dateTimeToDateString()),
     );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
-import 'package:plant_application/database/converters.dart';
 import 'package:plant_application/database/plant_app_db.dart';
 import 'package:plant_application/models/repot_data.dart';
+import 'package:plant_application/models/timing_enum.dart';
 import 'package:plant_application/models/water_event_data.dart';
 
 part 'events_dao.g.dart';
@@ -37,7 +37,9 @@ class EventsDao extends DatabaseAccessor<PlantAppDb> with _$EventsDaoMixin {
           date: DateTime.parse(data['date']),
           notes: data['notes'] as String?,
           offsetDays: data['offsetDays'] as int?,
-          timingFeedback: stringToTiming(data['timingFeedback'] as String?),
+          timingFeedback: Timing.stringToTiming(
+            data['timingFeedback'] as String?,
+          ),
         );
       }).toList();
     });
@@ -117,6 +119,14 @@ class EventsDao extends DatabaseAccessor<PlantAppDb> with _$EventsDaoMixin {
       ..where((tbl) => tbl.id.equals(eventId))).write(updates);
   }
 
+  Future<void> updateRepotEvent(
+    int eventId,
+    RepotEventsCompanion updates,
+  ) async {
+    await (update(repotEvents)
+      ..where((tbl) => tbl.eventId.equals(eventId))).write(updates);
+  }
+
   Future<void> updateWaterEventFromCompanion(
     int eventId,
     WaterEventsCompanion updates,
@@ -174,7 +184,9 @@ class EventsDao extends DatabaseAccessor<PlantAppDb> with _$EventsDaoMixin {
               date: DateTime.parse(data['date']),
               notes: data['notes'] as String?,
               offsetDays: data['offsetDays'] as int?,
-              timingFeedback: stringToTiming(data['timingFeedback'] as String?),
+              timingFeedback: Timing.stringToTiming(
+                data['timingFeedback'] as String?,
+              ),
             );
           }).toList();
 

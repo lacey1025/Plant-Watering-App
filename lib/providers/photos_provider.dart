@@ -5,9 +5,9 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:plant_application/database/converters.dart';
 import 'package:plant_application/database/plant_app_db.dart';
 import 'package:plant_application/providers/db_provider.dart';
+import 'package:plant_application/utils/datetime_extensions.dart';
 
 class PhotoNotifier extends StateNotifier<AsyncValue<List<Photo>>> {
   final Ref ref;
@@ -59,7 +59,7 @@ class PhotoNotifier extends StateNotifier<AsyncValue<List<Photo>>> {
       PhotosCompanion(
         plantId: Value(plantId),
         filePath: Value(photoPath),
-        date: Value(dateTimeToDateString(DateTime.now())),
+        date: Value(DateTime.now().dateTimeToDateString()),
       ),
     );
   }
@@ -85,7 +85,9 @@ class PhotoNotifier extends StateNotifier<AsyncValue<List<Photo>>> {
     );
 
     return photos.any(
-      (photo) => dateStringToDateTime(photo.date).isAfter(lastAnniversary),
+      (photo) => DateTimeHelpers.dateStringToDateTime(
+        photo.date,
+      ).isAfter(lastAnniversary),
     );
   }
 

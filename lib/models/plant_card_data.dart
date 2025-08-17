@@ -1,7 +1,7 @@
-import 'package:plant_application/database/converters.dart';
 import 'package:plant_application/database/plant_app_db.dart';
 import 'package:plant_application/models/water_event_data.dart';
 import 'package:plant_application/utils/adaptive_watering_schedule.dart';
+import 'package:plant_application/utils/datetime_extensions.dart';
 
 enum WateringStatus { green, yellow, red, white }
 
@@ -55,7 +55,7 @@ class PlantCardData {
     final lastWateredDate =
         (lastWatered != null)
             ? lastWatered.date
-            : dateStringToDateTime(plant.dateAdded);
+            : DateTimeHelpers.dateStringToDateTime(plant.dateAdded);
 
     DateTime? minDueDate;
     DateTime? maxDueDate;
@@ -104,7 +104,7 @@ class PlantCardData {
     final lastWateredDate =
         (lastWatered != null)
             ? lastWatered!
-            : dateStringToDateTime(plant.dateAdded);
+            : DateTimeHelpers.dateStringToDateTime(plant.dateAdded);
     final dueDate = lastWateredDate.add(
       Duration(days: schedule!.minSuccessfulDays.round()),
     );

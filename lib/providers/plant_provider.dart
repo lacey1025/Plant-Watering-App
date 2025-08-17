@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:plant_application/database/converters.dart';
 import 'package:plant_application/database/plant_app_db.dart';
 import 'package:plant_application/models/plant_card_data.dart';
 import 'package:plant_application/models/timing_enum.dart';
 import 'package:plant_application/providers/db_provider.dart';
+import 'package:plant_application/utils/datetime_extensions.dart';
 
 class PlantNotifier extends StateNotifier<AsyncValue<PlantCardData?>> {
   PlantNotifier(this.ref, this.plantId) : super(const AsyncValue.loading()) {
@@ -95,7 +95,8 @@ class PlantNotifier extends StateNotifier<AsyncValue<PlantCardData?>> {
     final daysSinceLast =
         wateredDate
             .difference(
-              lastWatering ?? dateStringToDateTime(plant.plant.dateAdded),
+              lastWatering ??
+                  DateTimeHelpers.dateStringToDateTime(plant.plant.dateAdded),
             )
             .inDays;
     if (timing != null) {

@@ -18,6 +18,26 @@ class AddWateringScreen extends ConsumerStatefulWidget {
 }
 
 class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
+  double interval = 0.25;
+  int? selectedWaterId;
+  final _potSizeController = TextEditingController();
+  final _soilTypeController = TextEditingController();
+  final _repotNotesController = TextEditingController();
+  final _notesController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  bool _removeWaterTypes = false;
+  bool _removeFertTypes = false;
+  bool _validWaterType = true;
+
+  @override
+  void dispose() {
+    _potSizeController.dispose();
+    _soilTypeController.dispose();
+    _repotNotesController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -46,17 +66,6 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
       notifier.updateDate(picked);
     }
   }
-
-  double interval = 0.25;
-  int? selectedWaterId;
-  final _potSizeController = TextEditingController();
-  final _soilTypeController = TextEditingController();
-  final _repotNotesController = TextEditingController();
-  final _notesController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  bool _removeWaterTypes = false;
-  bool _removeFertTypes = false;
-  bool _validWaterType = true;
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +105,9 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
             accessoriesAsync.when(
               data: (accessories) {
                 final waterAccessories =
-                    accessories.where((a) => a.type == 'watering').toList();
+                    accessories
+                        .where((a) => a.type == EventType.watering.toString())
+                        .toList();
 
                 return Column(
                   spacing: 8,
@@ -223,7 +234,9 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
             accessoriesAsync.when(
               data: (accessories) {
                 final fertilizerAccessories =
-                    accessories.where((a) => a.type == 'fertilizer').toList();
+                    accessories
+                        .where((a) => a.type == EventType.fertilizer.toString())
+                        .toList();
 
                 return Column(
                   children: [
@@ -484,7 +497,7 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                     controller: _potSizeController,
                     validator: (value) {
                       if (form.isRepot) {
-                        if (value == null) {
+                        if (value == null || value.isEmpty) {
                           return 'Please enter a pot size';
                         }
                         final potSize = double.tryParse(

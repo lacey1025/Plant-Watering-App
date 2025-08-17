@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/models/accessory_data.dart';
+import 'package:plant_application/models/event_types_enum.dart';
 import 'package:plant_application/models/fertilizer_data.dart';
 import 'package:plant_application/models/repot_data.dart';
 import 'package:plant_application/models/timing_enum.dart';
 import 'package:plant_application/models/water_event_data.dart';
 import 'package:plant_application/providers/db_provider.dart';
 import 'package:plant_application/providers/home_screen_providers.dart';
+import 'package:plant_application/screens/add_repot/add_repot_screen.dart';
 import 'package:plant_application/screens/add_watering/add_watering_screen.dart';
 import 'package:plant_application/screens/add_watering/watering_form_data.dart';
 import 'package:plant_application/utils/adaptive_watering_schedule.dart';
+import 'package:plant_application/utils/datetime_extensions.dart';
 
 class EventSection<T> extends ConsumerStatefulWidget {
   const EventSection({
@@ -18,12 +21,14 @@ class EventSection<T> extends ConsumerStatefulWidget {
     required this.formatDate,
     required this.plantId,
     required this.title,
+    required this.eventType,
   });
 
   final List<dynamic> events;
   final String Function(DateTime) formatDate;
   final int plantId;
   final String title;
+  final EventType eventType;
 
   @override
   ConsumerState<EventSection<T>> createState() => _EventSectionState<T>();
@@ -32,30 +37,21 @@ class EventSection<T> extends ConsumerStatefulWidget {
 class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
   final Set<int> expandedEventIds = {};
 
-  // @override
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
-
-  //   // Clear expanded items when returning to this route
-  //   WidgetsBinding.instance.addPostFrameCallback((_) {
-  //     final route = ModalRoute.of(context);
-  //     if (route != null && route.isCurrent) {
-  //       setState(() {
-  //         expandedEventIds.clear();
-  //       });
-  //     }
-  //   });
-  // }
-
-  void _editEvent(WaterEventData event, List<AccessoryData> accessories) async {
+  void _editWaterEvent(
+    WaterEventData event,
+    List<AccessoryData> accessories,
+  ) async {
     final fertilizers =
         accessories.map((a) {
-          if (a.type == 'fertilizer') {
+          if (a.type == EventType.fertilizer.toString()) {
             return FertilizerData(accessoryId: a.id, strength: a.strength ?? 1);
           }
         }).toSet();
     final waterId =
-        accessories.where((a) => a.type == "watering").firstOrNull?.id;
+        accessories
+            .where((a) => a.type == EventType.watering.toString())
+            .firstOrNull
+            ?.id;
 
     final form = WateringFormData(
       plantId: widget.plantId,
@@ -77,14 +73,34 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
     );
   }
 
-  void _deleteEvent(int eventId) async {
+  void _editRepotEvent(RepotData data) {
+    expandedEventIds.clear();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder:
+            (_) => AddRepotScreen(plantId: widget.plantId, initialData: data),
+      ),
+    );
+  }
+
+  void _deleteEvent(int eventId, EventType type) async {
     final db = ref.read(databaseProvider);
-    await db.eventsDao.deleteWaterEvents([eventId]);
-    await db.eventsDao.deleteEvent(eventId);
-    final plants = await ref.read(plantCardsProvider.future);
-    final plant = plants.where((p) => p.plant.id == widget.plantId).firstOrNull;
-    if (plant == null) return;
-    await AdaptiveWateringSchedule.adjustPlantSchedule(eventId, plant, ref);
+    await db.transaction(() async {
+      if (type == EventType.watering) {
+        await db.eventsDao.deleteWaterEvents([eventId]);
+      } else if (type == EventType.repot) {
+        await db.eventsDao.deleteRepotEvents([eventId]);
+      }
+      await db.accessoriesDao.deleteEventAccessoriesByEvents([eventId]);
+      await db.eventsDao.deleteEvent(eventId);
+    });
+    if (type == EventType.watering) {
+      final plants = await ref.read(plantCardsProvider.future);
+      final plant =
+          plants.where((p) => p.plant.id == widget.plantId).firstOrNull;
+      if (plant == null) return;
+      await AdaptiveWateringSchedule.adjustPlantSchedule(eventId, plant, ref);
+    }
   }
 
   @override
@@ -142,7 +158,7 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
                                 children: [
                                   Text(widget.formatDate(date)),
                                   (daysBetween != null)
-                                      ? Text('$daysBetween days')
+                                      ? Text(date.daysBeforeString(daysBetween))
                                       : const Text(''),
                                   const SizedBox(width: 12),
                                 ],
@@ -190,36 +206,29 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
 
                                         return accessoriesAsync.when(
                                           data: (accessories) {
-                                            // if (accessories.isEmpty) {
-                                            //   return const Text(
-                                            //     'No accessories',
-                                            //   );
-                                            // }
                                             return Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                if (accessories.isNotEmpty) ...[
+                                                if (accessories.isNotEmpty)
                                                   ..._buildAccessoryWidgets(
                                                     accessories,
                                                     event.runtimeType,
                                                   ),
-                                                  if (event is RepotData) ...[
-                                                    Text(
-                                                      "Pot size: ${event.potSize}",
-                                                    ),
-                                                    Text(
-                                                      "Soil Type: ${event.soilType}",
-                                                    ),
-                                                  ],
-                                                  if (event != null &&
-                                                      event.notes != null &&
-                                                      (event.notes as String)
-                                                          .isNotEmpty)
-                                                    Text(
-                                                      "notes: ${event.notes}",
-                                                    ),
+                                                if (event is RepotData) ...[
+                                                  Text(
+                                                    "Pot size: ${event.potSize}",
+                                                  ),
+                                                  Text(
+                                                    "Soil Type: ${event.soilType}",
+                                                  ),
                                                 ],
+                                                if (event != null &&
+                                                    event.notes != null &&
+                                                    (event.notes as String)
+                                                        .isNotEmpty)
+                                                  Text("notes: ${event.notes}"),
+
                                                 Row(
                                                   mainAxisAlignment:
                                                       MainAxisAlignment
@@ -227,10 +236,20 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
                                                   children: [
                                                     IconButton(
                                                       onPressed: () {
-                                                        _editEvent(
-                                                          event,
-                                                          accessories,
-                                                        );
+                                                        if (widget.eventType ==
+                                                            EventType
+                                                                .watering) {
+                                                          _editWaterEvent(
+                                                            event,
+                                                            accessories,
+                                                          );
+                                                        } else if (widget
+                                                                .eventType ==
+                                                            EventType.repot) {
+                                                          _editRepotEvent(
+                                                            event,
+                                                          );
+                                                        }
                                                       },
                                                       icon: Icon(Icons.edit),
                                                     ),
@@ -240,6 +259,7 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
                                                           onDelete: () async {
                                                             _deleteEvent(
                                                               eventId,
+                                                              widget.eventType,
                                                             );
                                                           },
                                                         );
@@ -284,13 +304,19 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
           icon: const Icon(Icons.add),
           label: Text("Add Event"),
           onPressed: () {
-            if (widget.title == "Watering History") {
-              setState(() {
-                expandedEventIds.clear();
-              });
+            setState(() {
+              expandedEventIds.clear();
+            });
+            if (widget.eventType == EventType.watering) {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => AddWateringScreen(plantId: widget.plantId),
+                ),
+              );
+            } else if (widget.eventType == EventType.repot) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AddRepotScreen(plantId: widget.plantId),
                 ),
               );
             }
@@ -310,13 +336,15 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
     }
 
     final List<AccessoryData> waterList =
-        accessories.where((a) => a.type == 'watering').toList();
+        accessories
+            .where((a) => a.type == EventType.watering.toString())
+            .toList();
 
     final Iterable<AccessoryData> fertilizerList = accessories.where(
-      (a) => a.type == 'fertilizer',
+      (a) => a.type == EventType.fertilizer.toString(),
     );
     final Iterable<AccessoryData> pesticideList = accessories.where(
-      (a) => a.type == 'pesticide',
+      (a) => a.type == EventType.pesticide.toString(),
     );
     final List<Widget> list = [];
     if (waterList.isNotEmpty) {
