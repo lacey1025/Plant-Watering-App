@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/models/event_types_enum.dart';
+import 'package:plant_application/models/timing_enum.dart';
 import 'package:plant_application/providers/accessories_provider.dart';
 import 'package:plant_application/screens/add_watering/add_accessory_dialog.dart';
 import 'package:plant_application/screens/add_watering/watering_form_data.dart';
@@ -486,9 +487,11 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                         if (value == null) {
                           return 'Please enter a pot size';
                         }
-                        final potSize = int.tryParse(_potSizeController.text);
+                        final potSize = double.tryParse(
+                          _potSizeController.text,
+                        );
                         if (potSize == null) {
-                          return 'Please ensure pot size is a number without a decimal';
+                          return 'Please ensure pot size is a number';
                         }
                       }
                       return null;
@@ -533,7 +536,7 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                     notifier.updateNotes(_notesController.text);
                     if (form.isRepot) {
                       notifier.updatePotSize(
-                        int.tryParse(_potSizeController.text)!,
+                        double.tryParse(_potSizeController.text)!,
                       );
                       notifier.updateSoilType(_soilTypeController.text);
                       notifier.updateRepotNotes(_repotNotesController.text);

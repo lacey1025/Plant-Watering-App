@@ -41,7 +41,6 @@ class PlantAppDb extends _$PlantAppDb {
 class Plants extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
-  // IntColumn get wateringFrequency => integer().nullable()();
   BoolColumn get inWateringSchedule => boolean()();
   TextColumn get notes => text().nullable()();
   TextColumn get dateAdded => text()();
@@ -89,7 +88,7 @@ class WaterEvents extends Table {
 @DataClassName('RepotEvent')
 class RepotEvents extends Table {
   IntColumn get eventId => integer().references(Events, #id)();
-  IntColumn get potSize => integer()();
+  RealColumn get potSize => real()();
   TextColumn get soilType => text()();
 }
 

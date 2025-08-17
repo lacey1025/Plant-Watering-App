@@ -52,17 +52,6 @@ class PlantCardData {
       );
     }
 
-    // if (plant.wateringFrequency == null) {
-    //   return PlantCardData(
-    //     plant: plant,
-    //     lastWatered: lastWatered?.date,
-    //     earliestNextWater: null,
-    //     latestNextWater: null,
-    //     schedule: schedule,
-    //     wateringStatus: WateringStatus.white,
-    //   );
-    // }
-
     final lastWateredDate =
         (lastWatered != null)
             ? lastWatered.date
@@ -127,7 +116,7 @@ class PlantCardData {
 
     if (today.isBefore(dueDate)) {
       final days = dueDate.difference(today).inDays;
-      return "Due in $days day${days != 1 ? 's' : ''}";
+      return "Within window in $days day${days != 1 ? 's' : ''}";
     } else if (today.isAfter(endDate)) {
       final days = today.difference(endDate).inDays;
       return "Overdue by $days day${days != 1 ? 's' : ''}";

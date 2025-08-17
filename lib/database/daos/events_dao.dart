@@ -84,7 +84,7 @@ class EventsDao extends DatabaseAccessor<PlantAppDb> with _$EventsDaoMixin {
         final data = row.data;
         return RepotData(
           id: data['id'] as int,
-          potSize: data['potSize'] as int,
+          potSize: data['potSize'] as double,
           soilType: data['soilType'] as String,
           plantId: data['plantId'] as int,
           date: DateTime.parse(data['date']),

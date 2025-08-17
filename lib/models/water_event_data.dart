@@ -1,4 +1,4 @@
-import 'package:plant_application/screens/add_watering/watering_form_data.dart';
+import 'package:plant_application/models/timing_enum.dart';
 
 class WaterEventData {
   final int id;

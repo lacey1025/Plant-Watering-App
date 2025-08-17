@@ -5,9 +5,9 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/database/plant_app_db.dart';
 import 'package:plant_application/models/plant_card_data.dart';
+import 'package:plant_application/models/timing_enum.dart';
 import 'package:plant_application/models/water_event_data.dart';
 import 'package:plant_application/providers/db_provider.dart';
-import 'package:plant_application/screens/add_watering/watering_form_data.dart';
 
 class AdaptiveWateringSchedule {
   double minSuccessfulDays;

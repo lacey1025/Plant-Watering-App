@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/models/accessory_data.dart';
+import 'package:plant_application/models/fertilizer_data.dart';
 import 'package:plant_application/models/repot_data.dart';
+import 'package:plant_application/models/timing_enum.dart';
 import 'package:plant_application/models/water_event_data.dart';
 import 'package:plant_application/providers/db_provider.dart';
 import 'package:plant_application/providers/home_screen_providers.dart';
@@ -29,6 +31,21 @@ class EventSection<T> extends ConsumerStatefulWidget {
 
 class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
   final Set<int> expandedEventIds = {};
+
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+
+  //   // Clear expanded items when returning to this route
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     final route = ModalRoute.of(context);
+  //     if (route != null && route.isCurrent) {
+  //       setState(() {
+  //         expandedEventIds.clear();
+  //       });
+  //     }
+  //   });
+  // }
 
   void _editEvent(WaterEventData event, List<AccessoryData> accessories) async {
     final fertilizers =
@@ -219,7 +236,13 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
                                                     ),
                                                     IconButton(
                                                       onPressed: () {
-                                                        _deleteEvent(eventId);
+                                                        _deleteEventDialog(
+                                                          onDelete: () async {
+                                                            _deleteEvent(
+                                                              eventId,
+                                                            );
+                                                          },
+                                                        );
                                                       },
                                                       icon: Icon(Icons.delete),
                                                     ),
@@ -320,5 +343,30 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
       list.addAll(pesticideList.map((p) => Text(p.name)));
     }
     return list;
+  }
+
+  Future<void> _deleteEventDialog({required void Function() onDelete}) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Confirm Delete'),
+            content: const Text('Are you sure you want to delete this event?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+    );
+    if (confirmed == true) {
+      onDelete();
+    }
   }
 }

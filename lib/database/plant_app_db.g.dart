@@ -1591,11 +1591,11 @@ class $RepotEventsTable extends RepotEvents
     'potSize',
   );
   @override
-  late final GeneratedColumn<int> potSize = GeneratedColumn<int>(
+  late final GeneratedColumn<double> potSize = GeneratedColumn<double>(
     'pot_size',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
   static const VerificationMeta _soilTypeMeta = const VerificationMeta(
@@ -1663,7 +1663,7 @@ class $RepotEventsTable extends RepotEvents
           )!,
       potSize:
           attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
+            DriftSqlType.double,
             data['${effectivePrefix}pot_size'],
           )!,
       soilType:
@@ -1682,7 +1682,7 @@ class $RepotEventsTable extends RepotEvents
 
 class RepotEvent extends DataClass implements Insertable<RepotEvent> {
   final int eventId;
-  final int potSize;
+  final double potSize;
   final String soilType;
   const RepotEvent({
     required this.eventId,
@@ -1693,7 +1693,7 @@ class RepotEvent extends DataClass implements Insertable<RepotEvent> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['event_id'] = Variable<int>(eventId);
-    map['pot_size'] = Variable<int>(potSize);
+    map['pot_size'] = Variable<double>(potSize);
     map['soil_type'] = Variable<String>(soilType);
     return map;
   }
@@ -1713,7 +1713,7 @@ class RepotEvent extends DataClass implements Insertable<RepotEvent> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return RepotEvent(
       eventId: serializer.fromJson<int>(json['eventId']),
-      potSize: serializer.fromJson<int>(json['potSize']),
+      potSize: serializer.fromJson<double>(json['potSize']),
       soilType: serializer.fromJson<String>(json['soilType']),
     );
   }
@@ -1722,12 +1722,12 @@ class RepotEvent extends DataClass implements Insertable<RepotEvent> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'eventId': serializer.toJson<int>(eventId),
-      'potSize': serializer.toJson<int>(potSize),
+      'potSize': serializer.toJson<double>(potSize),
       'soilType': serializer.toJson<String>(soilType),
     };
   }
 
-  RepotEvent copyWith({int? eventId, int? potSize, String? soilType}) =>
+  RepotEvent copyWith({int? eventId, double? potSize, String? soilType}) =>
       RepotEvent(
         eventId: eventId ?? this.eventId,
         potSize: potSize ?? this.potSize,
@@ -1764,7 +1764,7 @@ class RepotEvent extends DataClass implements Insertable<RepotEvent> {
 
 class RepotEventsCompanion extends UpdateCompanion<RepotEvent> {
   final Value<int> eventId;
-  final Value<int> potSize;
+  final Value<double> potSize;
   final Value<String> soilType;
   final Value<int> rowid;
   const RepotEventsCompanion({
@@ -1775,7 +1775,7 @@ class RepotEventsCompanion extends UpdateCompanion<RepotEvent> {
   });
   RepotEventsCompanion.insert({
     required int eventId,
-    required int potSize,
+    required double potSize,
     required String soilType,
     this.rowid = const Value.absent(),
   }) : eventId = Value(eventId),
@@ -1783,7 +1783,7 @@ class RepotEventsCompanion extends UpdateCompanion<RepotEvent> {
        soilType = Value(soilType);
   static Insertable<RepotEvent> custom({
     Expression<int>? eventId,
-    Expression<int>? potSize,
+    Expression<double>? potSize,
     Expression<String>? soilType,
     Expression<int>? rowid,
   }) {
@@ -1797,7 +1797,7 @@ class RepotEventsCompanion extends UpdateCompanion<RepotEvent> {
 
   RepotEventsCompanion copyWith({
     Value<int>? eventId,
-    Value<int>? potSize,
+    Value<double>? potSize,
     Value<String>? soilType,
     Value<int>? rowid,
   }) {
@@ -1816,7 +1816,7 @@ class RepotEventsCompanion extends UpdateCompanion<RepotEvent> {
       map['event_id'] = Variable<int>(eventId.value);
     }
     if (potSize.present) {
-      map['pot_size'] = Variable<int>(potSize.value);
+      map['pot_size'] = Variable<double>(potSize.value);
     }
     if (soilType.present) {
       map['soil_type'] = Variable<String>(soilType.value);
@@ -4215,14 +4215,14 @@ typedef $$EventAccessoriesTableProcessedTableManager =
 typedef $$RepotEventsTableCreateCompanionBuilder =
     RepotEventsCompanion Function({
       required int eventId,
-      required int potSize,
+      required double potSize,
       required String soilType,
       Value<int> rowid,
     });
 typedef $$RepotEventsTableUpdateCompanionBuilder =
     RepotEventsCompanion Function({
       Value<int> eventId,
-      Value<int> potSize,
+      Value<double> potSize,
       Value<String> soilType,
       Value<int> rowid,
     });
@@ -4259,7 +4259,7 @@ class $$RepotEventsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get potSize => $composableBuilder(
+  ColumnFilters<double> get potSize => $composableBuilder(
     column: $table.potSize,
     builder: (column) => ColumnFilters(column),
   );
@@ -4302,7 +4302,7 @@ class $$RepotEventsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get potSize => $composableBuilder(
+  ColumnOrderings<double> get potSize => $composableBuilder(
     column: $table.potSize,
     builder: (column) => ColumnOrderings(column),
   );
@@ -4345,7 +4345,7 @@ class $$RepotEventsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get potSize =>
+  GeneratedColumn<double> get potSize =>
       $composableBuilder(column: $table.potSize, builder: (column) => column);
 
   GeneratedColumn<String> get soilType =>
@@ -4405,7 +4405,7 @@ class $$RepotEventsTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> eventId = const Value.absent(),
-                Value<int> potSize = const Value.absent(),
+                Value<double> potSize = const Value.absent(),
                 Value<String> soilType = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RepotEventsCompanion(
@@ -4417,7 +4417,7 @@ class $$RepotEventsTableTableManager
           createCompanionCallback:
               ({
                 required int eventId,
-                required int potSize,
+                required double potSize,
                 required String soilType,
                 Value<int> rowid = const Value.absent(),
               }) => RepotEventsCompanion.insert(

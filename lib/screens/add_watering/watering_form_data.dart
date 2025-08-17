@@ -1,34 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:plant_application/database/converters.dart';
 import 'package:plant_application/database/plant_app_db.dart';
-
-enum Timing {
-  early,
-  justRight,
-  late,
-  notSure;
-
-  @override
-  String toString() {
-    switch (this) {
-      case Timing.early:
-        return 'Too early';
-      case Timing.justRight:
-        return 'Just right';
-      case Timing.late:
-        return 'Too late';
-      case Timing.notSure:
-        return 'Not sure';
-    }
-  }
-}
-
-class FertilizerData {
-  final int accessoryId;
-  double strength;
-
-  FertilizerData({required this.accessoryId, required this.strength});
-}
+import 'package:plant_application/models/fertilizer_data.dart';
+import 'package:plant_application/models/timing_enum.dart';
 
 class WateringFormData {
   final int plantId;
@@ -37,7 +11,7 @@ class WateringFormData {
   final Timing timing;
   final int daysToCorrect;
   final Set<FertilizerData> fertilizers;
-  final int potSize;
+  final double potSize;
   final String soilType;
   final String notes;
   final String repotNotes;
@@ -52,7 +26,7 @@ class WateringFormData {
     this.timing = Timing.justRight,
     this.daysToCorrect = 0,
     Set<FertilizerData>? fertilizers,
-    this.potSize = 6,
+    this.potSize = 6.0,
     this.soilType = '',
     this.notes = '',
     this.repotNotes = '',
@@ -87,7 +61,7 @@ class WateringFormData {
     Timing? timing,
     int? daysToCorrect,
     Set<FertilizerData>? fertilizers,
-    int? potSize,
+    double? potSize,
     String? soilType,
     String? notes,
     String? repotNotes,

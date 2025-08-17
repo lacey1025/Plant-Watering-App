@@ -1,5 +1,4 @@
-// Converts a DateTime (any time) to a date-only string "YYYY-MM-DD"
-import 'package:plant_application/screens/add_watering/watering_form_data.dart';
+import 'package:plant_application/models/timing_enum.dart';
 
 String dateTimeToDateString(DateTime date) {
   final y = date.year.toString().padLeft(4, '0');
@@ -8,9 +7,7 @@ String dateTimeToDateString(DateTime date) {
   return '$y-$m-$d';
 }
 
-// Converts a date-only string "YYYY-MM-DD" to a DateTime at UTC midnight
 DateTime dateStringToDateTime(String dateString) {
-  // DateTime.parse treats "YYYY-MM-DD" as UTC midnight
   return DateTime.parse(dateString);
 }
 

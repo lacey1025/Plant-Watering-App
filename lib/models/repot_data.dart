@@ -1,6 +1,6 @@
 class RepotData {
   final int id;
-  final int potSize;
+  final double potSize;
   final String soilType;
   final int plantId;
   final DateTime date;
