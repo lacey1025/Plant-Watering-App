@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:plant_application/screens/add_plant/full_screen_image_page.dart';
-import 'package:plant_application/screens/add_plant/image_source_sheet.dart';
+import 'package:plant_application/screens/add_plant/widgets/full_screen_image_page.dart';
+import 'package:plant_application/screens/add_plant/widgets/image_source_sheet.dart';
 import 'package:plant_application/screens/add_plant/plant_form_data.dart';
 import 'package:plant_application/screens/add_plant/plant_form_notifier.dart';
 import 'package:plant_application/screens/home/home_screen.dart';

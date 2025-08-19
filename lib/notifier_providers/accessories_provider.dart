@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/database/plant_app_db.dart';
-import 'package:plant_application/models/event_types_enum.dart';
-import 'package:plant_application/providers/db_provider.dart';
+import 'package:plant_application/models/enums/event_types_enum.dart';
+import 'package:plant_application/notifier_providers/db_providers.dart';
 
 class AccessoriesNotifier extends StateNotifier<AsyncValue<List<Accessory>>> {
   AccessoriesNotifier(this.ref) : super(const AsyncValue.loading()) {

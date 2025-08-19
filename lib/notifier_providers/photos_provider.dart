@@ -5,8 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:plant_application/database/plant_app_db.dart';
-import 'package:plant_application/providers/db_provider.dart';
-import 'package:plant_application/providers/primary_photo_provider.dart';
+import 'package:plant_application/notifier_providers/db_providers.dart';
+import 'package:plant_application/notifier_providers/primary_photo_provider.dart';
 import 'package:plant_application/utils/datetime_extensions.dart';
 
 class PhotoNotifier extends StateNotifier<AsyncValue<List<Photo>>> {

@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/database/plant_app_db.dart';
-import 'package:plant_application/models/event_types_enum.dart';
+import 'package:plant_application/models/enums/event_types_enum.dart';
 import 'package:plant_application/models/repot_data.dart';
 import 'package:plant_application/models/water_event_data.dart';
-import 'package:plant_application/providers/home_screen_providers.dart';
-import 'package:plant_application/providers/plant_provider.dart';
+import 'package:plant_application/notifier_providers/db_providers.dart';
+import 'package:plant_application/notifier_providers/plant_provider.dart';
 import 'package:plant_application/screens/add_plant/add_plant_screen.dart';
 import 'package:plant_application/screens/add_plant/plant_form_data.dart';
 import 'package:plant_application/screens/home/home_screen.dart';
-import 'package:plant_application/screens/view_plant/banner_widget.dart';
-import 'package:plant_application/screens/view_plant/event_section_widget.dart';
-import 'package:plant_application/screens/view_plant/photo_reminder_banner.dart';
-import 'package:plant_application/screens/view_plant/plant_app_bar.dart';
+import 'package:plant_application/screens/view_plant/widgets/banner_widget.dart';
+import 'package:plant_application/screens/view_plant/widgets/delete_dialog.dart';
+import 'package:plant_application/screens/view_plant/widgets/event_section_widget.dart';
+import 'package:plant_application/screens/view_plant/widgets/photo_reminder_banner.dart';
+import 'package:plant_application/screens/view_plant/widgets/plant_app_bar.dart';
 import 'package:plant_application/utils/datetime_extensions.dart';
 
 class ViewPlant extends ConsumerStatefulWidget {
@@ -181,12 +182,21 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () {
-                          _deletePlantDialog(
-                            onDelete: () async {
-                              await plantNotifier.deletePlant();
-                            },
+                        onPressed: () async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder:
+                                (context) =>
+                                    DeleteDialog(itemName: plant.plant.name),
                           );
+                          if (confirmed == true) {
+                            await plantNotifier.deletePlant();
+                            if (context.mounted) {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(builder: (_) => HomeScreen()),
+                              );
+                            }
+                          }
                         },
                         child: const Text("Delete Plant"),
                       ),
@@ -223,36 +233,5 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
         error: (e, st) => const SizedBox.shrink(),
       ),
     );
-  }
-
-  Future<void> _deletePlantDialog({required void Function() onDelete}) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Confirm Delete'),
-            content: const Text('Are you sure you want to delete this plant?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text('Delete'),
-              ),
-            ],
-          ),
-    );
-
-    if (confirmed == true) {
-      onDelete();
-      if (mounted) {
-        Navigator.of(
-          context,
-        ).pushReplacement(MaterialPageRoute(builder: (_) => HomeScreen()));
-      }
-    }
   }
 }

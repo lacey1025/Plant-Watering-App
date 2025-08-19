@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:plant_application/database/plant_app_db.dart';
-import 'package:plant_application/models/event_types_enum.dart';
+import 'package:plant_application/models/enums/event_types_enum.dart';
 import 'package:plant_application/models/fertilizer_data.dart';
-import 'package:plant_application/models/timing_enum.dart';
+import 'package:plant_application/models/enums/timing_enum.dart';
 import 'package:plant_application/utils/datetime_extensions.dart';
 
 class WateringFormData {

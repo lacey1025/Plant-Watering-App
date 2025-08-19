@@ -2,9 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/models/plant_card_data.dart';
-import 'package:plant_application/providers/primary_photo_provider.dart';
+import 'package:plant_application/notifier_providers/primary_photo_provider.dart';
 import 'package:plant_application/screens/add_photo/add_photo_screen.dart';
-import 'package:plant_application/screens/view_plant/photo_carousel_dialog.dart';
+import 'package:plant_application/screens/view_plant/widgets/photo_carousel_dialog.dart';
 import 'package:plant_application/utils/shadows.dart';
 
 class PlantAppBar extends ConsumerWidget implements PreferredSizeWidget {

@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/models/accessory_data.dart';
-import 'package:plant_application/models/event_types_enum.dart';
+import 'package:plant_application/models/enums/event_types_enum.dart';
 import 'package:plant_application/models/fertilizer_data.dart';
+import 'package:plant_application/models/plant_card_data.dart';
 import 'package:plant_application/models/repot_data.dart';
-import 'package:plant_application/models/timing_enum.dart';
+import 'package:plant_application/models/enums/timing_enum.dart';
 import 'package:plant_application/models/water_event_data.dart';
-import 'package:plant_application/providers/db_provider.dart';
-import 'package:plant_application/providers/home_screen_providers.dart';
+import 'package:plant_application/notifier_providers/db_providers.dart';
 import 'package:plant_application/screens/add_repot/add_repot_screen.dart';
 import 'package:plant_application/screens/add_watering/add_watering_screen.dart';
 import 'package:plant_application/screens/add_watering/watering_form_data.dart';
+import 'package:plant_application/screens/view_plant/widgets/delete_dialog.dart';
 import 'package:plant_application/utils/adaptive_watering_schedule.dart';
 import 'package:plant_application/utils/datetime_extensions.dart';
 
@@ -105,7 +106,7 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Fixed title header that doesn't scroll
+        // header section
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
@@ -116,7 +117,7 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
           ),
         ),
 
-        // Scrollable list content
+        // events list
         SizedBox(
           height: 200,
           child:
@@ -187,12 +188,6 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // const Text(
-                                    //   'Accessories:',
-                                    //   style: TextStyle(
-                                    //     fontWeight: FontWeight.bold,
-                                    //   ),
-                                    // ),
                                     Consumer(
                                       builder: (context, widgetRef, _) {
                                         final accessoriesAsync = widgetRef
@@ -252,15 +247,26 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
                                                       icon: Icon(Icons.edit),
                                                     ),
                                                     IconButton(
-                                                      onPressed: () {
-                                                        _deleteEventDialog(
-                                                          onDelete: () async {
-                                                            _deleteEvent(
-                                                              eventId,
-                                                              widget.eventType,
+                                                      onPressed: () async {
+                                                        final confirmed =
+                                                            await showDialog<
+                                                              bool
+                                                            >(
+                                                              context: context,
+                                                              builder:
+                                                                  (
+                                                                    context,
+                                                                  ) => DeleteDialog(
+                                                                    itemName:
+                                                                        "this event",
+                                                                  ),
                                                             );
-                                                          },
-                                                        );
+                                                        if (confirmed == true) {
+                                                          _deleteEvent(
+                                                            eventId,
+                                                            widget.eventType,
+                                                          );
+                                                        }
                                                       },
                                                       icon: Icon(Icons.delete),
                                                     ),
@@ -346,12 +352,7 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
     );
     final List<Widget> list = [];
     if (waterList.isNotEmpty) {
-      list.add(
-        Row(
-          // mainAxisAlignment: MainAxisAlignment.center,
-          children: [Text("Water Type: "), Text(waterList[0].name)],
-        ),
-      );
+      list.add(Row(children: [Text("Water Type: "), Text(waterList[0].name)]));
       // list.addAll(waterList.map((w) => Text(w.name)));
     }
     if (fertilizerList.isNotEmpty) {
@@ -369,30 +370,5 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
       list.addAll(pesticideList.map((p) => Text(p.name)));
     }
     return list;
-  }
-
-  Future<void> _deleteEventDialog({required void Function() onDelete}) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Confirm Delete'),
-            content: const Text('Are you sure you want to delete this event?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text('Delete'),
-              ),
-            ],
-          ),
-    );
-    if (confirmed == true) {
-      onDelete();
-    }
   }
 }

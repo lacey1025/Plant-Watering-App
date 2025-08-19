@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:plant_application/models/event_types_enum.dart';
-import 'package:plant_application/providers/accessories_provider.dart';
+import 'package:plant_application/models/enums/event_types_enum.dart';
+import 'package:plant_application/notifier_providers/accessories_provider.dart';
 
 Future<int?> addWaterTypeDialog(
   BuildContext context, {

@@ -1,5 +1,7 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/database/plant_app_db.dart';
 import 'package:plant_application/models/water_event_data.dart';
+import 'package:plant_application/notifier_providers/db_providers.dart';
 import 'package:plant_application/utils/adaptive_watering_schedule.dart';
 import 'package:plant_application/utils/datetime_extensions.dart';
 
@@ -125,3 +127,13 @@ class PlantCardData {
     }
   }
 }
+
+final plantCardsProvider = FutureProvider<List<PlantCardData>>((ref) async {
+  final plants = await ref.watch(allPlantsProvider.future);
+  final wateringEvents = await ref.watch(allWateringEventsProvider.future);
+
+  return plants.map((plant) {
+    final events = wateringEvents[plant.id] ?? [];
+    return PlantCardData.buildPlantCardData(plant, events);
+  }).toList();
+});

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:plant_application/providers/home_screen_providers.dart';
+import 'package:plant_application/models/plant_card_data.dart';
 import 'package:plant_application/screens/add_plant/add_plant_screen.dart';
 import 'package:plant_application/screens/home/plant_card.dart';
 

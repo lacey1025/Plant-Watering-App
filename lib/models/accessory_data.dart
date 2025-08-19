@@ -1,3 +1,6 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:plant_application/notifier_providers/db_providers.dart';
+
 class AccessoryData {
   final int id;
   final String type;
@@ -11,3 +14,9 @@ class AccessoryData {
     this.strength,
   });
 }
+
+final accessoriesForEventProvider = StreamProvider.family
+    .autoDispose<List<AccessoryData>, int>((ref, eventId) {
+      final db = ref.read(databaseProvider);
+      return db.accessoriesDao.watchAccessoriesForEvent(eventId);
+    });

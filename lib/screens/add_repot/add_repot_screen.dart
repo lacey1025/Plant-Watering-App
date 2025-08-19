@@ -2,9 +2,9 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/database/plant_app_db.dart';
-import 'package:plant_application/models/event_types_enum.dart';
+import 'package:plant_application/models/enums/event_types_enum.dart';
 import 'package:plant_application/models/repot_data.dart';
-import 'package:plant_application/providers/db_provider.dart';
+import 'package:plant_application/notifier_providers/db_providers.dart';
 import 'package:plant_application/utils/datetime_extensions.dart';
 
 class AddRepotScreen extends ConsumerStatefulWidget {

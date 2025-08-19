@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:plant_application/models/event_types_enum.dart';
-import 'package:plant_application/models/timing_enum.dart';
-import 'package:plant_application/providers/accessories_provider.dart';
+import 'package:plant_application/models/enums/event_types_enum.dart';
+import 'package:plant_application/models/enums/timing_enum.dart';
+import 'package:plant_application/notifier_providers/accessories_provider.dart';
 import 'package:plant_application/screens/add_watering/add_accessory_dialog.dart';
 import 'package:plant_application/screens/add_watering/watering_form_data.dart';
 import 'package:plant_application/screens/add_watering/watering_form_notifier.dart';

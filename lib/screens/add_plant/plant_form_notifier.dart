@@ -2,9 +2,9 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:plant_application/database/plant_app_db.dart';
-import 'package:plant_application/models/event_types_enum.dart';
-import 'package:plant_application/providers/db_provider.dart';
-import 'package:plant_application/providers/photos_provider.dart';
+import 'package:plant_application/models/enums/event_types_enum.dart';
+import 'package:plant_application/notifier_providers/db_providers.dart';
+import 'package:plant_application/notifier_providers/photos_provider.dart';
 import 'package:plant_application/screens/add_plant/plant_form_data.dart';
 import 'package:plant_application/utils/datetime_extensions.dart';
 
@@ -75,7 +75,7 @@ class PlantFormNotifier extends StateNotifier<PlantFormData> {
     });
 
     if (plantId != null && state.pickedImage != null) {
-      addPhoto(plantId!);
+      await addPhoto(plantId!);
     }
   }
 

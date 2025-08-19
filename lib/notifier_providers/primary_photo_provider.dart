@@ -1,15 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/database/plant_app_db.dart';
-import 'package:plant_application/providers/db_provider.dart';
-
-// final primaryPhotoProvider = FutureProvider.family<Photo?, int>((
-//   ref,
-//   plantId,
-// ) async {
-//   final database = ref.read(databaseProvider);
-
-//   return database.photosDao.getPrimaryPhoto(plantId);
-// });
+import 'package:plant_application/notifier_providers/db_providers.dart';
 
 final primaryPhotoNotifierProvider =
     StateNotifierProvider.family<PrimaryPhotoNotifier, AsyncValue<Photo?>, int>(

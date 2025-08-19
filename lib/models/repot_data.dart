@@ -1,3 +1,6 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:plant_application/notifier_providers/db_providers.dart';
+
 class RepotData {
   final int id;
   final double potSize;
@@ -27,3 +30,9 @@ class RepotData {
     daysSinceLast: daysSinceLast ?? this.daysSinceLast,
   );
 }
+
+final repotEventsForPlantProvider = StreamProvider.family
+    .autoDispose<List<RepotData>, int>((ref, plantId) {
+      final db = ref.read(databaseProvider);
+      return db.eventsDao.watchRepotEventsForPlant(plantId);
+    });

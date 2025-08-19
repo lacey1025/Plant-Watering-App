@@ -15,7 +15,6 @@ class ImageSourceSheet extends StatelessWidget {
             leading: const Icon(Icons.camera_alt),
             title: const Text('Take a photo'),
             onTap: () async {
-              // Navigator.pop(context);
               final picker = ImagePicker();
               final picked = await picker.pickImage(source: ImageSource.camera);
               onImageSelected(picked);
@@ -25,7 +24,6 @@ class ImageSourceSheet extends StatelessWidget {
             leading: const Icon(Icons.photo_library),
             title: const Text('Choose from gallery'),
             onTap: () async {
-              // Navigator.pop(context);
               final picker = ImagePicker();
               final picked = await picker.pickImage(
                 source: ImageSource.gallery,

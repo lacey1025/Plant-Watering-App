@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:plant_application/database/plant_app_db.dart';
-import 'package:plant_application/providers/photos_provider.dart';
-import 'package:plant_application/providers/primary_photo_provider.dart';
+import 'package:plant_application/notifier_providers/photos_provider.dart';
+import 'package:plant_application/notifier_providers/primary_photo_provider.dart';
 import 'package:plant_application/screens/add_photo/add_photo_screen.dart';
-import 'package:plant_application/screens/add_plant/image_source_sheet.dart';
+import 'package:plant_application/screens/add_plant/widgets/image_source_sheet.dart';
 import 'package:plant_application/utils/shadows.dart';
 import 'package:plant_application/utils/datetime_extensions.dart';
 
