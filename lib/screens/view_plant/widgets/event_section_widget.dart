@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:plant_application/database/plant_app_db.dart';
 import 'package:plant_application/models/accessory_data.dart';
 import 'package:plant_application/models/enums/event_types_enum.dart';
 import 'package:plant_application/models/fertilizer_data.dart';
+import 'package:plant_application/models/pesticide_event_data.dart';
 import 'package:plant_application/models/plant_card_data.dart';
 import 'package:plant_application/models/repot_data.dart';
 import 'package:plant_application/models/enums/timing_enum.dart';
 import 'package:plant_application/models/water_event_data.dart';
 import 'package:plant_application/notifier_providers/db_providers.dart';
+import 'package:plant_application/screens/add_pesticide_event/add_pesticide_screen.dart';
 import 'package:plant_application/screens/add_repot/add_repot_screen.dart';
 import 'package:plant_application/screens/add_watering/add_watering_screen.dart';
 import 'package:plant_application/screens/add_watering/watering_form_data.dart';
@@ -35,6 +38,19 @@ class EventSection<T> extends ConsumerStatefulWidget {
 
 class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
   final Set<int> expandedEventIds = {};
+
+  void _editPesticideEvent(Event event, List<AccessoryData> accessories) {
+    expandedEventIds.clear();
+    final data = PesticideEventData(event: event, accessories: accessories);
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder:
+            (_) =>
+                AddPesticideScreen(plantId: widget.plantId, initialData: data),
+      ),
+    );
+  }
 
   void _editWaterEvent(
     WaterEventData event,
@@ -139,6 +155,10 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
                       final date =
                           (event != null && event.date is DateTime)
                               ? (event.date as DateTime)
+                              : (event.date is String)
+                              ? (DateTimeHelpers.dateStringToDateTime(
+                                event.date,
+                              ))
                               : DateTime.now();
                       final daysBetween =
                           (event is WaterEventData || event is RepotData)
@@ -229,19 +249,29 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
                                                   children: [
                                                     IconButton(
                                                       onPressed: () {
-                                                        if (widget.eventType ==
-                                                            EventType
-                                                                .watering) {
-                                                          _editWaterEvent(
-                                                            event,
-                                                            accessories,
-                                                          );
-                                                        } else if (widget
-                                                                .eventType ==
-                                                            EventType.repot) {
-                                                          _editRepotEvent(
-                                                            event,
-                                                          );
+                                                        switch (widget
+                                                            .eventType) {
+                                                          case EventType
+                                                              .watering:
+                                                            _editWaterEvent(
+                                                              event,
+                                                              accessories,
+                                                            );
+                                                            break;
+                                                          case EventType.repot:
+                                                            _editRepotEvent(
+                                                              event,
+                                                            );
+                                                            break;
+                                                          case EventType
+                                                              .pesticide:
+                                                            _editPesticideEvent(
+                                                              event,
+                                                              accessories,
+                                                            );
+                                                            break;
+                                                          default:
+                                                            return;
                                                         }
                                                       },
                                                       icon: Icon(Icons.edit),
@@ -311,19 +341,23 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
             setState(() {
               expandedEventIds.clear();
             });
-            if (widget.eventType == EventType.watering) {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => AddWateringScreen(plantId: widget.plantId),
-                ),
-              );
-            } else if (widget.eventType == EventType.repot) {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => AddRepotScreen(plantId: widget.plantId),
-                ),
-              );
+
+            Widget Function(BuildContext) builder;
+            switch (widget.eventType) {
+              case EventType.watering:
+                builder = (_) => AddWateringScreen(plantId: widget.plantId);
+                break;
+              case EventType.repot:
+                builder = (_) => AddRepotScreen(plantId: widget.plantId);
+                break;
+              case EventType.pesticide:
+                builder = (_) => AddPesticideScreen(plantId: widget.plantId);
+                break;
+              default:
+                return;
             }
+
+            Navigator.of(context).push(MaterialPageRoute(builder: builder));
           },
         ),
       ],

@@ -172,7 +172,7 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                             backgroundColor: null,
                           ),
                           onPressed: () async {
-                            final newId = await addWaterTypeDialog(
+                            final newId = await addAccessoryDialog(
                               context,
                               type: EventType.watering,
                               ref: ref,
@@ -343,7 +343,7 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                             backgroundColor: null,
                           ),
                           onPressed: () async {
-                            await addWaterTypeDialog(
+                            await addAccessoryDialog(
                               context,
                               type: EventType.fertilizer,
                               ref: ref,

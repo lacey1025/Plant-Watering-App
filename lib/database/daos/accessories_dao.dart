@@ -24,7 +24,7 @@ class AccessoriesDao extends DatabaseAccessor<PlantAppDb>
         name: row.readTable(accessories).name,
         strength: row.readTable(eventAccessories).strength,
       );
-    }).watch(); // Changed from .get() to .watch()
+    }).watch();
   }
 
   Stream<List<Accessory>> watchAllActiveAccessories() {

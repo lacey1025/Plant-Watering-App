@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/models/enums/event_types_enum.dart';
 import 'package:plant_application/notifier_providers/accessories_provider.dart';
 
-Future<int?> addWaterTypeDialog(
+Future<int?> addAccessoryDialog(
   BuildContext context, {
   required EventType type,
   required WidgetRef ref,
@@ -21,7 +21,9 @@ Future<int?> addWaterTypeDialog(
               ? "Water"
               : (type == EventType.fertilizer)
               ? "Fertilizer"
-              : '';
+              : (type == EventType.pesticide)
+              ? "Pesticide"
+              : "";
       return AlertDialog(
         title: Text('Add New $title Type'),
         content: Form(
@@ -50,7 +52,7 @@ Future<int?> addWaterTypeDialog(
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(null), // cancel
+            onPressed: () => Navigator.of(context).pop(null),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
