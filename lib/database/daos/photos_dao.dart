@@ -18,7 +18,39 @@ class PhotosDao extends DatabaseAccessor<PlantAppDb> with _$PhotosDaoMixin {
         .watch();
   }
 
+  Future<void> updatePhoto(PhotosCompanion photo) {
+    return (update(photos)
+      ..where((tbl) => tbl.id.equals(photo.id.value))).write(photo);
+  }
+
+  Future<void> makePrimary(int photoId, int plantId) async {
+    await (update(photos)..where(
+      (p) => p.plantId.equals(plantId),
+    )).write(PhotosCompanion(isPrimary: Value(false)));
+    await (update(photos)..where(
+      (p) => p.id.equals(photoId),
+    )).write(PhotosCompanion(isPrimary: Value(true)));
+  }
+
+  Future<Photo?> getPrimaryPhoto(int plantId) {
+    return (select(photos)..where(
+      (p) => p.plantId.equals(plantId) & p.isPrimary.equals(true),
+    )).getSingleOrNull();
+  }
+
+  Future<Photo?> getMostRecentPhoto(int plantId) {
+    return (select(photos)
+          ..where((p) => p.plantId.equals(plantId))
+          ..orderBy([(p) => OrderingTerm.desc(p.date)])
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
   Future<void> deletePhotosByPlantId(int plantId) async {
     await (delete(photos)..where((p) => p.plantId.equals(plantId))).go();
+  }
+
+  Future<void> deletePhoto(int photoId) {
+    return (delete(photos)..where((p) => p.id.equals(photoId))).go();
   }
 }

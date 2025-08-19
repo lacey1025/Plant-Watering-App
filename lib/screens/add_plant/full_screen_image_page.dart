@@ -11,14 +11,25 @@ class FullscreenImagePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: GestureDetector(
-        onTap: () => Navigator.pop(context),
-        child: Center(
-          child: Hero(
-            tag: 'imageHero',
-            child: InteractiveViewer(child: Image.file(File(imagePath))),
+      body: Stack(
+        children: [
+          Center(
+            child: Hero(
+              tag: 'imageHero',
+              child: InteractiveViewer(child: Image.file(File(imagePath))),
+            ),
           ),
-        ),
+          Positioned(
+            top: 64,
+            right: 8,
+            child: IconButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              icon: Icon(Icons.close, color: Colors.white, size: 32),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -98,4 +98,6 @@ class Photos extends Table {
   IntColumn get plantId => integer().references(Plants, #id)();
   TextColumn get date => text()();
   TextColumn get filePath => text()();
+  TextColumn get notes => text().nullable()();
+  BoolColumn get isPrimary => boolean()();
 }

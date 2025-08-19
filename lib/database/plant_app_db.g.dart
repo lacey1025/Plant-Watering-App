@@ -2176,8 +2176,38 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
   @override
-  List<GeneratedColumn> get $columns => [id, plantId, date, filePath];
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isPrimaryMeta = const VerificationMeta(
+    'isPrimary',
+  );
+  @override
+  late final GeneratedColumn<bool> isPrimary = GeneratedColumn<bool>(
+    'is_primary',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_primary" IN (0, 1))',
+    ),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    plantId,
+    date,
+    filePath,
+    notes,
+    isPrimary,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -2217,6 +2247,20 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
     } else if (isInserting) {
       context.missing(_filePathMeta);
     }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('is_primary')) {
+      context.handle(
+        _isPrimaryMeta,
+        isPrimary.isAcceptableOrUnknown(data['is_primary']!, _isPrimaryMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_isPrimaryMeta);
+    }
     return context;
   }
 
@@ -2246,6 +2290,15 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, Photo> {
             DriftSqlType.string,
             data['${effectivePrefix}file_path'],
           )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      isPrimary:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}is_primary'],
+          )!,
     );
   }
 
@@ -2260,11 +2313,15 @@ class Photo extends DataClass implements Insertable<Photo> {
   final int plantId;
   final String date;
   final String filePath;
+  final String? notes;
+  final bool isPrimary;
   const Photo({
     required this.id,
     required this.plantId,
     required this.date,
     required this.filePath,
+    this.notes,
+    required this.isPrimary,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2273,6 +2330,10 @@ class Photo extends DataClass implements Insertable<Photo> {
     map['plant_id'] = Variable<int>(plantId);
     map['date'] = Variable<String>(date);
     map['file_path'] = Variable<String>(filePath);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    map['is_primary'] = Variable<bool>(isPrimary);
     return map;
   }
 
@@ -2282,6 +2343,9 @@ class Photo extends DataClass implements Insertable<Photo> {
       plantId: Value(plantId),
       date: Value(date),
       filePath: Value(filePath),
+      notes:
+          notes == null && nullToAbsent ? const Value.absent() : Value(notes),
+      isPrimary: Value(isPrimary),
     );
   }
 
@@ -2295,6 +2359,8 @@ class Photo extends DataClass implements Insertable<Photo> {
       plantId: serializer.fromJson<int>(json['plantId']),
       date: serializer.fromJson<String>(json['date']),
       filePath: serializer.fromJson<String>(json['filePath']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      isPrimary: serializer.fromJson<bool>(json['isPrimary']),
     );
   }
   @override
@@ -2305,22 +2371,34 @@ class Photo extends DataClass implements Insertable<Photo> {
       'plantId': serializer.toJson<int>(plantId),
       'date': serializer.toJson<String>(date),
       'filePath': serializer.toJson<String>(filePath),
+      'notes': serializer.toJson<String?>(notes),
+      'isPrimary': serializer.toJson<bool>(isPrimary),
     };
   }
 
-  Photo copyWith({int? id, int? plantId, String? date, String? filePath}) =>
-      Photo(
-        id: id ?? this.id,
-        plantId: plantId ?? this.plantId,
-        date: date ?? this.date,
-        filePath: filePath ?? this.filePath,
-      );
+  Photo copyWith({
+    int? id,
+    int? plantId,
+    String? date,
+    String? filePath,
+    Value<String?> notes = const Value.absent(),
+    bool? isPrimary,
+  }) => Photo(
+    id: id ?? this.id,
+    plantId: plantId ?? this.plantId,
+    date: date ?? this.date,
+    filePath: filePath ?? this.filePath,
+    notes: notes.present ? notes.value : this.notes,
+    isPrimary: isPrimary ?? this.isPrimary,
+  );
   Photo copyWithCompanion(PhotosCompanion data) {
     return Photo(
       id: data.id.present ? data.id.value : this.id,
       plantId: data.plantId.present ? data.plantId.value : this.plantId,
       date: data.date.present ? data.date.value : this.date,
       filePath: data.filePath.present ? data.filePath.value : this.filePath,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      isPrimary: data.isPrimary.present ? data.isPrimary.value : this.isPrimary,
     );
   }
 
@@ -2330,13 +2408,16 @@ class Photo extends DataClass implements Insertable<Photo> {
           ..write('id: $id, ')
           ..write('plantId: $plantId, ')
           ..write('date: $date, ')
-          ..write('filePath: $filePath')
+          ..write('filePath: $filePath, ')
+          ..write('notes: $notes, ')
+          ..write('isPrimary: $isPrimary')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, plantId, date, filePath);
+  int get hashCode =>
+      Object.hash(id, plantId, date, filePath, notes, isPrimary);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2344,7 +2425,9 @@ class Photo extends DataClass implements Insertable<Photo> {
           other.id == this.id &&
           other.plantId == this.plantId &&
           other.date == this.date &&
-          other.filePath == this.filePath);
+          other.filePath == this.filePath &&
+          other.notes == this.notes &&
+          other.isPrimary == this.isPrimary);
 }
 
 class PhotosCompanion extends UpdateCompanion<Photo> {
@@ -2352,31 +2435,42 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
   final Value<int> plantId;
   final Value<String> date;
   final Value<String> filePath;
+  final Value<String?> notes;
+  final Value<bool> isPrimary;
   const PhotosCompanion({
     this.id = const Value.absent(),
     this.plantId = const Value.absent(),
     this.date = const Value.absent(),
     this.filePath = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.isPrimary = const Value.absent(),
   });
   PhotosCompanion.insert({
     this.id = const Value.absent(),
     required int plantId,
     required String date,
     required String filePath,
+    this.notes = const Value.absent(),
+    required bool isPrimary,
   }) : plantId = Value(plantId),
        date = Value(date),
-       filePath = Value(filePath);
+       filePath = Value(filePath),
+       isPrimary = Value(isPrimary);
   static Insertable<Photo> custom({
     Expression<int>? id,
     Expression<int>? plantId,
     Expression<String>? date,
     Expression<String>? filePath,
+    Expression<String>? notes,
+    Expression<bool>? isPrimary,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (plantId != null) 'plant_id': plantId,
       if (date != null) 'date': date,
       if (filePath != null) 'file_path': filePath,
+      if (notes != null) 'notes': notes,
+      if (isPrimary != null) 'is_primary': isPrimary,
     });
   }
 
@@ -2385,12 +2479,16 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
     Value<int>? plantId,
     Value<String>? date,
     Value<String>? filePath,
+    Value<String?>? notes,
+    Value<bool>? isPrimary,
   }) {
     return PhotosCompanion(
       id: id ?? this.id,
       plantId: plantId ?? this.plantId,
       date: date ?? this.date,
       filePath: filePath ?? this.filePath,
+      notes: notes ?? this.notes,
+      isPrimary: isPrimary ?? this.isPrimary,
     );
   }
 
@@ -2409,6 +2507,12 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
     if (filePath.present) {
       map['file_path'] = Variable<String>(filePath.value);
     }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (isPrimary.present) {
+      map['is_primary'] = Variable<bool>(isPrimary.value);
+    }
     return map;
   }
 
@@ -2418,7 +2522,9 @@ class PhotosCompanion extends UpdateCompanion<Photo> {
           ..write('id: $id, ')
           ..write('plantId: $plantId, ')
           ..write('date: $date, ')
-          ..write('filePath: $filePath')
+          ..write('filePath: $filePath, ')
+          ..write('notes: $notes, ')
+          ..write('isPrimary: $isPrimary')
           ..write(')'))
         .toString();
   }
@@ -4788,6 +4894,8 @@ typedef $$PhotosTableCreateCompanionBuilder =
       required int plantId,
       required String date,
       required String filePath,
+      Value<String?> notes,
+      required bool isPrimary,
     });
 typedef $$PhotosTableUpdateCompanionBuilder =
     PhotosCompanion Function({
@@ -4795,6 +4903,8 @@ typedef $$PhotosTableUpdateCompanionBuilder =
       Value<int> plantId,
       Value<String> date,
       Value<String> filePath,
+      Value<String?> notes,
+      Value<bool> isPrimary,
     });
 
 final class $$PhotosTableReferences
@@ -4840,6 +4950,16 @@ class $$PhotosTableFilterComposer extends Composer<_$PlantAppDb, $PhotosTable> {
 
   ColumnFilters<String> get filePath => $composableBuilder(
     column: $table.filePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isPrimary => $composableBuilder(
+    column: $table.isPrimary,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4891,6 +5011,16 @@ class $$PhotosTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isPrimary => $composableBuilder(
+    column: $table.isPrimary,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$PlantsTableOrderingComposer get plantId {
     final $$PlantsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -4932,6 +5062,12 @@ class $$PhotosTableAnnotationComposer
 
   GeneratedColumn<String> get filePath =>
       $composableBuilder(column: $table.filePath, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<bool> get isPrimary =>
+      $composableBuilder(column: $table.isPrimary, builder: (column) => column);
 
   $$PlantsTableAnnotationComposer get plantId {
     final $$PlantsTableAnnotationComposer composer = $composerBuilder(
@@ -4989,11 +5125,15 @@ class $$PhotosTableTableManager
                 Value<int> plantId = const Value.absent(),
                 Value<String> date = const Value.absent(),
                 Value<String> filePath = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<bool> isPrimary = const Value.absent(),
               }) => PhotosCompanion(
                 id: id,
                 plantId: plantId,
                 date: date,
                 filePath: filePath,
+                notes: notes,
+                isPrimary: isPrimary,
               ),
           createCompanionCallback:
               ({
@@ -5001,11 +5141,15 @@ class $$PhotosTableTableManager
                 required int plantId,
                 required String date,
                 required String filePath,
+                Value<String?> notes = const Value.absent(),
+                required bool isPrimary,
               }) => PhotosCompanion.insert(
                 id: id,
                 plantId: plantId,
                 date: date,
                 filePath: filePath,
+                notes: notes,
+                isPrimary: isPrimary,
               ),
           withReferenceMapper:
               (p0) =>

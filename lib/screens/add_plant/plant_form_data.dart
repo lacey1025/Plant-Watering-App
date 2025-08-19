@@ -8,11 +8,12 @@ class PlantFormData {
   final String name;
   final bool inSchedule;
   final double frequency;
-  // final int windowSize;
   final String notes;
   final XFile? pickedImage;
   final DateTime? lastWatered;
   final bool isUpdate;
+  final String? photoNotes;
+  final DateTime photoDate;
 
   PlantFormData({
     this.id,
@@ -23,7 +24,9 @@ class PlantFormData {
     this.pickedImage,
     this.lastWatered,
     this.isUpdate = false,
-  });
+    this.photoNotes,
+    DateTime? photoDate,
+  }) : photoDate = photoDate ?? DateTime.now();
 
   static const _unset = Object();
 
@@ -34,6 +37,8 @@ class PlantFormData {
     String? notes,
     Object? pickedImage = _unset,
     Object? lastWatered = _unset,
+    String? photoNotes,
+    DateTime? photoDate,
   }) {
     return PlantFormData(
       id: id,
@@ -46,6 +51,8 @@ class PlantFormData {
       lastWatered:
           lastWatered == _unset ? this.lastWatered : lastWatered as DateTime,
       isUpdate: isUpdate,
+      photoNotes: photoNotes ?? this.photoNotes,
+      photoDate: photoDate ?? this.photoDate,
     );
   }
 
@@ -53,7 +60,6 @@ class PlantFormData {
     final intFrequency = frequency.toInt();
     return PlantsCompanion(
       name: Value(name),
-      // wateringFrequency: Value(intFrequency),
       inWateringSchedule: Value(inSchedule),
       notes: Value(notes),
       dateAdded: Value(DateTime.now().dateTimeToDateString()),
@@ -64,11 +70,19 @@ class PlantFormData {
     );
   }
 
+  PhotosCompanion toPhotoCompanion(int plantId, String filepath) {
+    return PhotosCompanion(
+      plantId: Value(plantId),
+      date: Value(photoDate.toString()),
+      filePath: Value(filepath),
+      notes: Value(photoNotes),
+      isPrimary: Value(true),
+    );
+  }
+
   PlantsCompanion toUpdateCompanion() {
-    // final intFrequency = frequency.toInt();
     return PlantsCompanion(
       name: Value(name),
-      // wateringFrequency: Value(intFrequency),
       inWateringSchedule: Value(inSchedule),
       notes: Value(notes),
       dateAdded: Value(DateTime.now().dateTimeToDateString()),

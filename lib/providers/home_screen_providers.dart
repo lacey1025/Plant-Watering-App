@@ -7,13 +7,13 @@ import 'package:plant_application/models/water_event_data.dart';
 import 'package:plant_application/providers/db_provider.dart';
 
 final allPlantsProvider = StreamProvider<List<Plant>>((ref) {
-  final db = ref.watch(databaseProvider);
+  final db = ref.read(databaseProvider);
   return db.plantsDao.watchAllPlants();
 });
 
 final allWateringEventsProvider =
     StreamProvider<Map<int, List<WaterEventData>>>((ref) {
-      final db = ref.watch(databaseProvider);
+      final db = ref.read(databaseProvider);
       return db.eventsDao.watchAllWateringEvents().map((events) {
         // Group events by plantId
         final Map<int, List<WaterEventData>> map = {};
@@ -117,26 +117,26 @@ final plantCardsProvider = FutureProvider<List<PlantCardData>>((ref) async {
 // Used in view plant screen
 final wateringEventsForPlantProvider = StreamProvider.family
     .autoDispose<List<WaterEventData>, int>((ref, plantId) {
-      final db = ref.watch(databaseProvider);
+      final db = ref.read(databaseProvider);
       return db.eventsDao.watchWateringEventsForPlant(plantId);
     });
 
 // Used in view plant screen
 final repotEventsForPlantProvider = StreamProvider.family
     .autoDispose<List<RepotData>, int>((ref, plantId) {
-      final db = ref.watch(databaseProvider);
+      final db = ref.read(databaseProvider);
       return db.eventsDao.watchRepotEventsForPlant(plantId);
     });
 
 // Used in view plant screen
 final pesticideEventsForPlantProvider = StreamProvider.family
     .autoDispose<List<Event>, int>((ref, plantId) {
-      final db = ref.watch(databaseProvider);
+      final db = ref.read(databaseProvider);
       return db.eventsDao.watchPesticideEventsForPlant(plantId);
     });
 
 final accessoriesForEventProvider = StreamProvider.family
     .autoDispose<List<AccessoryData>, int>((ref, eventId) {
-      final db = ref.watch(databaseProvider);
+      final db = ref.read(databaseProvider);
       return db.accessoriesDao.watchAccessoriesForEvent(eventId);
     });

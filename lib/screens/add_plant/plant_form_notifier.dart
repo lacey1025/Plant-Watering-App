@@ -43,16 +43,25 @@ class PlantFormNotifier extends StateNotifier<PlantFormData> {
     state = state.copyWith(lastWatered: value);
   }
 
+  void updatePhotoNotes(String value) {
+    state = state.copyWith(photoNotes: value);
+  }
+
+  void updatePhotoDate(DateTime value) {
+    state = state.copyWith(photoDate: value);
+  }
+
   Future<void> submit() async {
     final db = ref.read(databaseProvider);
     final plant = state.toPlantCompanion();
 
+    final stateLastWatered = state.lastWatered;
     DateTime? lastWatered;
-    if (state.lastWatered != null) {
+    if (stateLastWatered != null) {
       lastWatered = DateTime(
-        state.lastWatered!.year,
-        state.lastWatered!.month,
-        state.lastWatered!.day,
+        stateLastWatered.year,
+        stateLastWatered.month,
+        stateLastWatered.day,
       );
     }
     int? plantId;
@@ -65,14 +74,18 @@ class PlantFormNotifier extends StateNotifier<PlantFormData> {
       }
     });
 
-    if (plantId == null) return;
-    final photoNotifier = ref.read(photoNotifierProvider(plantId!).notifier);
-    String? savedImage;
-    if (state.pickedImage != null) {
-      savedImage = await photoNotifier.savePhoto(state.pickedImage!);
+    if (plantId != null && state.pickedImage != null) {
+      addPhoto(plantId!);
     }
+  }
+
+  Future<void> addPhoto(int plantId) async {
+    final photoNotifier = ref.read(photoNotifierProvider(plantId).notifier);
+    String? savedImage;
+    savedImage = await photoNotifier.savePhoto(state.pickedImage!);
     if (savedImage != null) {
-      await photoNotifier.insertPhoto(plantId: plantId!, photoPath: savedImage);
+      final photoCompanion = state.toPhotoCompanion(plantId, savedImage);
+      await photoNotifier.insertPhoto(photoCompanion);
     }
   }
 
@@ -87,18 +100,10 @@ class PlantFormNotifier extends StateNotifier<PlantFormData> {
     final id = state.id;
     if (id == null) return;
 
-    final photoNotifier = ref.read(photoNotifierProvider(state.id!).notifier);
-    String? savedImage;
+    await db.plantsDao.updatePlantFromCompanion(id, updatedPlant);
     if (state.pickedImage != null) {
-      savedImage = await photoNotifier.savePhoto(state.pickedImage!);
+      addPhoto(id);
     }
-
-    await db.transaction(() async {
-      await db.plantsDao.updatePlantFromCompanion(id, updatedPlant);
-      if (savedImage != null) {
-        await photoNotifier.insertPhoto(plantId: id, photoPath: savedImage);
-      }
-    });
   }
 
   Future<void> insertWateringEvent({

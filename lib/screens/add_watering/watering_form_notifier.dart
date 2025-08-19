@@ -93,7 +93,7 @@ class WateringFormNotifier extends StateNotifier<WateringFormData> {
     }
     late int wateringEventId;
     try {
-      final db = ref.watch(databaseProvider);
+      final db = ref.read(databaseProvider);
       final wateringEventCompanion = state.toWateringEventCompanion();
 
       await db.transaction(() async {
@@ -124,7 +124,7 @@ class WateringFormNotifier extends StateNotifier<WateringFormData> {
   Future<void> submitEdit() async {
     if (state.eventId == null) return;
     try {
-      final db = ref.watch(databaseProvider);
+      final db = ref.read(databaseProvider);
       final wateringEventCompanion = EventsCompanion(
         date: Value(state.date.dateTimeToDateString()),
         notes: Value(state.notes),

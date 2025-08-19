@@ -1,4 +1,41 @@
 extension DateTimeHelpers on DateTime {
+  String formatDate(bool isLong) {
+    final date = this;
+    final months = [];
+    if (isLong) {
+      months.addAll([
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
+      ]);
+    } else {
+      months.addAll([
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ]);
+    }
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+
   String daysBeforeString(int daysSincePrev) {
     if (daysSincePrev <= 0) {
       return "0 days";

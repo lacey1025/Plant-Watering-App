@@ -39,24 +39,6 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
     super.dispose();
   }
 
-  String formatDate(DateTime date) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${months[date.month - 1]} ${date.day}, ${date.year}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final plantAsync = ref.watch(plantNotifierProvider(widget.plantId));
@@ -127,7 +109,6 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
                             title: "Watering History",
                             plantId: plant.plant.id,
                             events: events,
-                            formatDate: formatDate,
                             eventType: EventType.watering,
                           ),
                         );
@@ -147,7 +128,6 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
                             title: "Repot History",
                             plantId: plant.plant.id,
                             events: events,
-                            formatDate: formatDate,
                             eventType: EventType.repot,
                           ),
                         );
@@ -165,7 +145,6 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
                           title: "Pesticide History",
                           plantId: plant.plant.id,
                           events: events,
-                          formatDate: formatDate,
                           eventType: EventType.pesticide,
                         );
                       },

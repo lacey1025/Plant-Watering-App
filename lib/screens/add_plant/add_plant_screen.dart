@@ -20,6 +20,7 @@ class AddPlantScreen extends ConsumerStatefulWidget {
 class _AddPlantScreenState extends ConsumerState<AddPlantScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _notesController;
+  late final TextEditingController _photoNotesController;
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -28,12 +29,14 @@ class _AddPlantScreenState extends ConsumerState<AddPlantScreen> {
     final form = ref.read(plantFormProvider(widget.form));
     _nameController = TextEditingController(text: form.name);
     _notesController = TextEditingController(text: form.notes);
+    _photoNotesController = TextEditingController(text: form.photoNotes);
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _notesController.dispose();
+    _photoNotesController.dispose();
     super.dispose();
   }
 
@@ -44,6 +47,7 @@ class _AddPlantScreenState extends ConsumerState<AddPlantScreen> {
     final notifier = ref.read(plantFormProvider(widget.form).notifier);
     notifier.updateName(_nameController.text);
     notifier.updateNotes(_notesController.text);
+    notifier.updatePhotoNotes(_photoNotesController.text);
 
     if (isAdd) {
       notifier.submit();
@@ -56,18 +60,21 @@ class _AddPlantScreenState extends ConsumerState<AddPlantScreen> {
     ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
   }
 
-  Future<void> _pickDate(BuildContext context) async {
+  Future<void> _pickDate({
+    required BuildContext context,
+    DateTime? initialDate,
+    required void Function(DateTime) onPicked,
+  }) async {
     final form = ref.watch(plantFormProvider(widget.form));
-    final notifier = ref.read(plantFormProvider(widget.form).notifier);
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: form.lastWatered ?? DateTime.now(),
-      firstDate: DateTime(2025),
+      initialDate: initialDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
       lastDate: DateTime.now(),
     );
 
     if (picked != null && picked != form.lastWatered) {
-      notifier.updateLastWatered(picked);
+      onPicked(picked);
     }
   }
 
@@ -77,6 +84,7 @@ class _AddPlantScreenState extends ConsumerState<AddPlantScreen> {
       builder:
           (context) => ImageSourceSheet(
             onImageSelected: (image) {
+              Navigator.of(context).pop();
               if (image != null) {
                 ref
                     .read(plantFormProvider(widget.form).notifier)
@@ -132,17 +140,6 @@ class _AddPlantScreenState extends ConsumerState<AddPlantScreen> {
                   onChanged: notifier.updateWateringFrequency,
                 ),
                 Text('Every ${form.frequency.toInt()} days'),
-                // const SizedBox(height: 8),
-                //   const Text("Watering window size"),
-                //   Slider(
-                //     value: form.windowSize.toDouble(),
-                //     min: 1,
-                //     max: 10,
-                //     divisions: 9,
-                //     label: "${form.windowSize}",
-                //     onChanged: notifier.updateWindowSize,
-                //   ),
-                //   Text('${form.windowSize.toInt()} days'),
               ],
               const SizedBox(height: 8),
               if (isAdd)
@@ -151,7 +148,14 @@ class _AddPlantScreenState extends ConsumerState<AddPlantScreen> {
                   children: [
                     Text("Date last watered"),
                     ElevatedButton.icon(
-                      onPressed: () => _pickDate(context),
+                      onPressed:
+                          () => _pickDate(
+                            context: context,
+                            initialDate: form.lastWatered,
+                            onPicked: (pickedPhoto) {
+                              notifier.updateLastWatered(pickedPhoto);
+                            },
+                          ),
                       icon: Icon(Icons.calendar_month),
                       label:
                           (form.lastWatered == null)
@@ -198,6 +202,8 @@ class _AddPlantScreenState extends ConsumerState<AddPlantScreen> {
                       right: 4,
                       child: GestureDetector(
                         onTap: () {
+                          _photoNotesController.clear();
+                          notifier.updatePhotoDate(DateTime.now());
                           notifier.updatePickedImage(null);
                         },
                         child: Container(
@@ -229,6 +235,30 @@ class _AddPlantScreenState extends ConsumerState<AddPlantScreen> {
                         : Text("Change photo"),
               ),
               const SizedBox(height: 16),
+              if (form.pickedImage != null) ...[
+                Text("Photo Date"),
+                ElevatedButton.icon(
+                  onPressed:
+                      () => _pickDate(
+                        context: context,
+                        initialDate: form.photoDate,
+                        onPicked: (pickedPhoto) {
+                          notifier.updatePhotoDate(pickedPhoto);
+                        },
+                      ),
+                  icon: Icon(Icons.calendar_month),
+                  label: Text(
+                    "${form.photoDate.month}/${form.photoDate.day}/${form.photoDate.year}",
+                  ),
+                ),
+                TextField(
+                  controller: _photoNotesController,
+                  decoration: const InputDecoration(
+                    labelText: "About this photo",
+                  ),
+                  maxLines: null,
+                ),
+              ],
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [

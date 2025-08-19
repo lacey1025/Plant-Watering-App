@@ -2,8 +2,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/models/plant_card_data.dart';
-import 'package:plant_application/providers/photos_provider.dart';
+import 'package:plant_application/providers/primary_photo_provider.dart';
+import 'package:plant_application/screens/add_photo/add_photo_screen.dart';
 import 'package:plant_application/screens/view_plant/photo_carousel_dialog.dart';
+import 'package:plant_application/utils/shadows.dart';
 
 class PlantAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final int plantId;
@@ -20,11 +22,11 @@ class PlantAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final photosAsync = ref.watch(photoNotifierProvider(plantId));
+    final primaryPhotoAsync = ref.watch(primaryPhotoNotifierProvider(plantId));
 
-    return photosAsync.when(
-      data: (photos) {
-        final backgroundPhoto = photos.isNotEmpty ? photos.first : null;
+    return primaryPhotoAsync.when(
+      data: (photo) {
+        final backgroundPhoto = photo;
 
         return AppBar(
           backgroundColor:
@@ -35,12 +37,24 @@ class PlantAppBar extends ConsumerWidget implements PreferredSizeWidget {
           toolbarHeight: kToolbarHeight + 120,
           flexibleSpace: GestureDetector(
             onTap: () {
-              if (photos.isNotEmpty) {
-                showDialog(
-                  context: context,
-                  builder:
-                      (_) =>
-                          PhotoCarouselDialog(photos: photos, initialIndex: 0),
+              if (photo != null) {
+                Navigator.of(context).push(
+                  PageRouteBuilder(
+                    pageBuilder:
+                        (context, animation, secondaryAnimation) =>
+                            PhotoCarouselDialog(
+                              plantId: plantId,
+                              initialIndex: 0,
+                            ),
+                    transitionDuration: Duration.zero,
+                    reverseTransitionDuration: Duration.zero,
+                  ),
+                );
+              } else {
+                Navigator.of(context).push(
+                  PageRouteBuilder(
+                    pageBuilder: (_, _, _) => AddPhotoScreen(plantId: plantId),
+                  ),
                 );
               }
             },
@@ -57,10 +71,19 @@ class PlantAppBar extends ConsumerWidget implements PreferredSizeWidget {
                             Container(color: Theme.of(context).primaryColor),
                   )
                 else
-                  Container(color: Theme.of(context).primaryColor),
+                  Container(
+                    color: Theme.of(context).primaryColor,
+                    child: Center(
+                      child: Icon(
+                        Icons.photo_camera,
+                        color: Colors.white12,
+                        size: 48,
+                      ),
+                    ),
+                  ),
 
                 // Dim overlay for better text readability
-                Container(color: Colors.black38),
+                Container(color: Colors.black12),
 
                 // Title positioned at bottom of the extended app bar
                 Positioned(
@@ -77,28 +100,30 @@ class PlantAppBar extends ConsumerWidget implements PreferredSizeWidget {
                             fontWeight: FontWeight.w500,
                             shadows:
                                 backgroundPhoto != null
-                                    ? [
-                                      const Shadow(
-                                        offset: Offset(1, 1),
-                                        blurRadius: 20,
-                                        color: Color.fromARGB(100, 0, 0, 0),
-                                      ),
-                                      const Shadow(
-                                        offset: Offset(-1, 1),
-                                        blurRadius: 20,
-                                        color: Color.fromARGB(100, 0, 0, 0),
-                                      ),
-                                      const Shadow(
-                                        offset: Offset(1, -1),
-                                        blurRadius: 20,
-                                        color: Color.fromARGB(100, 0, 0, 0),
-                                      ),
-                                      const Shadow(
-                                        offset: Offset(-1, -1),
-                                        blurRadius: 20,
-                                        color: Color.fromARGB(100, 0, 0, 0),
-                                      ),
-                                    ]
+                                    ? getShadows()
+                                    // backgroundPhoto != null
+                                    //     ? [
+                                    //       const Shadow(
+                                    //         offset: Offset(1, 1),
+                                    //         blurRadius: 20,
+                                    //         color: Color.fromARGB(100, 0, 0, 0),
+                                    //       ),
+                                    //       const Shadow(
+                                    //         offset: Offset(-1, 1),
+                                    //         blurRadius: 20,
+                                    //         color: Color.fromARGB(100, 0, 0, 0),
+                                    //       ),
+                                    //       const Shadow(
+                                    //         offset: Offset(1, -1),
+                                    //         blurRadius: 20,
+                                    //         color: Color.fromARGB(100, 0, 0, 0),
+                                    //       ),
+                                    //       const Shadow(
+                                    //         offset: Offset(-1, -1),
+                                    //         blurRadius: 20,
+                                    //         color: Color.fromARGB(100, 0, 0, 0),
+                                    //       ),
+                                    //     ]
                                     : null,
                           ),
                         ),

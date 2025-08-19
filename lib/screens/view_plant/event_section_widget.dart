@@ -18,14 +18,12 @@ class EventSection<T> extends ConsumerStatefulWidget {
   const EventSection({
     super.key,
     required this.events,
-    required this.formatDate,
     required this.plantId,
     required this.title,
     required this.eventType,
   });
 
   final List<dynamic> events;
-  final String Function(DateTime) formatDate;
   final int plantId;
   final String title;
   final EventType eventType;
@@ -156,7 +154,7 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(widget.formatDate(date)),
+                                  Text(date.formatDate(false)),
                                   (daysBetween != null)
                                       ? Text(date.daysBeforeString(daysBetween))
                                       : const Text(''),
