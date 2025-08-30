@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/models/enums/event_types_enum.dart';
 import 'package:plant_application/models/enums/timing_enum.dart';
 import 'package:plant_application/notifier_providers/accessories_provider.dart';
-import 'package:plant_application/screens/add_watering/add_accessory_dialog.dart';
 import 'package:plant_application/screens/add_watering/watering_form_data.dart';
 import 'package:plant_application/screens/add_watering/watering_form_notifier.dart';
+import 'package:plant_application/screens/shared/accessory_dialog.dart';
 
 class AddWateringScreen extends ConsumerStatefulWidget {
   const AddWateringScreen({super.key, required this.plantId, this.editData});
@@ -172,10 +172,11 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                             backgroundColor: null,
                           ),
                           onPressed: () async {
-                            final newId = await addAccessoryDialog(
+                            final newId = await showAccessoryDialog(
                               context,
-                              type: EventType.watering,
-                              ref: ref,
+                              ref,
+                              null,
+                              EventType.watering,
                             );
                             if (newId != null) {
                               notifier.updateWaterTypeId(newId);
@@ -343,10 +344,11 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                             backgroundColor: null,
                           ),
                           onPressed: () async {
-                            await addAccessoryDialog(
+                            await showAccessoryDialog(
                               context,
-                              type: EventType.fertilizer,
-                              ref: ref,
+                              ref,
+                              null,
+                              EventType.fertilizer,
                             );
                           },
                           label: Text('Add new'),
@@ -406,9 +408,7 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                                   ? Theme.of(context).colorScheme.primary
                                   : null,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              8,
-                            ), // rounded corners
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                         onPressed: () {
@@ -445,7 +445,7 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                           icon: Icon(Icons.remove, size: 18),
                           onPressed: () {
                             notifier.updateDaysToCorrect(
-                              (form.daysToCorrect - 1).clamp(0, 14),
+                              (form.daysToCorrect - 1).clamp(1, 14),
                             );
                           },
                         ),

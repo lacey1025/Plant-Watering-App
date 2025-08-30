@@ -17,4 +17,19 @@ enum EventType {
         return 'repot';
     }
   }
+
+  static EventType? toEvent(String type) {
+    switch (type) {
+      case "watering":
+        return EventType.watering;
+      case "fertilizer":
+        return EventType.fertilizer;
+      case "pesticide":
+        return EventType.pesticide;
+      case "repot":
+        return EventType.repot;
+      default:
+        return null;
+    }
+  }
 }

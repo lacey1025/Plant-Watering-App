@@ -6,7 +6,7 @@ import 'package:plant_application/models/enums/event_types_enum.dart';
 import 'package:plant_application/models/pesticide_event_data.dart';
 import 'package:plant_application/notifier_providers/accessories_provider.dart';
 import 'package:plant_application/notifier_providers/db_providers.dart';
-import 'package:plant_application/screens/add_watering/add_accessory_dialog.dart';
+import 'package:plant_application/screens/shared/accessory_dialog.dart';
 import 'package:plant_application/utils/datetime_extensions.dart';
 
 class AddPesticideScreen extends ConsumerStatefulWidget {
@@ -106,48 +106,6 @@ class _AddPesticideScreenState extends ConsumerState<AddPesticideScreen> {
     await db.accessoriesDao.insertEventAccessories(itemsToSubmit);
   }
 
-  // Future<bool> _submit() async {
-  //   final isValid = _formKey.currentState?.validate() ?? false;
-  //   if (!isValid) return false;
-  //   final notes = _notesController.text;
-
-  //   final event = EventsCompanion(
-  //     plantId: Value(widget.plantId),
-  //     eventType: Value(EventType.repot.toString()),
-  //     date: Value(
-  //       DateTime(
-  //         _pickedDate.year,
-  //         _pickedDate.month,
-  //         _pickedDate.day,
-  //       ).dateTimeToDateString(),
-  //     ),
-  //     notes: Value(notes),
-  //   );
-
-  //   final db = ref.read(databaseProvider);
-  //   late int eventId;
-  //   if (!isEdit) {
-  //     eventId = await db.eventsDao.insertEvent(event);
-  //   } else {
-  //     eventId = widget.initialData!.id;
-  //     await db.eventsDao.updateEventFromCompanion(eventId, event);
-  //   }
-
-  //   final repotEvent = RepotEventsCompanion(
-  //     eventId: Value(eventId),
-  //     potSize: Value(potSize),
-  //     soilType: Value(soilType),
-  //   );
-
-  //   if (!isEdit) {
-  //     await db.eventsDao.insertRepotEvent(repotEvent);
-  //   } else {
-  //     await db.eventsDao.updateRepotEvent(eventId, repotEvent);
-  //   }
-
-  //   return true;
-  // }
-
   @override
   Widget build(BuildContext context) {
     final accessoriesAsync = ref.watch(accessoriesNotifierProvider);
@@ -223,10 +181,11 @@ class _AddPesticideScreenState extends ConsumerState<AddPesticideScreen> {
                             backgroundColor: null,
                           ),
                           onPressed: () async {
-                            final newId = await addAccessoryDialog(
+                            final newId = await showAccessoryDialog(
                               context,
-                              type: EventType.pesticide,
-                              ref: ref,
+                              ref,
+                              null,
+                              EventType.pesticide,
                             );
                             if (newId != null) {
                               setState(() {
