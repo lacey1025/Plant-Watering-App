@@ -7,6 +7,9 @@ import 'package:plant_application/screens/add_plant/add_plant_screen.dart';
 import 'package:plant_application/screens/shared/accessory_dialog.dart';
 import 'package:plant_application/screens/home/item_list_tab.dart';
 import 'package:plant_application/screens/home/plant_card.dart';
+import 'package:plant_application/screens/shared/background_scaffold.dart';
+import 'package:plant_application/screens/shared/custom_app_bar.dart';
+import 'package:plant_application/screens/shared/custom_tab_bar.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -39,31 +42,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final plantCardsAsync = ref.watch(plantCardsProvider);
     final accessoriesAsync = ref.watch(accessoriesNotifierProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text("My Plants")),
+    return BackgroundScaffold(
+      appBar: CustomAppBar(title: "my plants"),
       body: Column(
         children: [
-          TabBar(
-            controller: _tabController,
-            tabs: const [
-              Tab(text: "plants"),
-              Tab(text: "fertilizers"),
-              Tab(text: "pesticides"),
-            ],
+          const SizedBox(height: 16), // space above tab bar
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: CustomTabBar(
+              controller: _tabController,
+              tabs: const ["plants", "fertilizers", "pesticides"],
+            ),
           ),
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                // Plants tab
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                  child: plantCardsAsync.when(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white54,
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
+              ),
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // Plants tab
+                  plantCardsAsync.when(
                     loading:
                         () => const Center(child: CircularProgressIndicator()),
-                    error: (e, st) {
-                      return Center(child: Text("Error loading plants: $e"));
-                    },
+                    error:
+                        (e, st) =>
+                            Center(child: Text("Error loading plants: $e")),
                     data: (plantCards) {
                       plantCards.sort((a, b) {
                         final aDate = a.earliestNextWater;
@@ -83,80 +91,86 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       );
                     },
                   ),
-                ),
 
-                // Fertilizers tab
-                accessoriesAsync.when(
-                  loading:
-                      () => const Center(child: CircularProgressIndicator()),
-                  error: (e, st) {
-                    return Center(child: Text("Error loading fertilizers: $e"));
-                  },
-                  data: (data) {
-                    final fertilizers =
-                        data
-                            .where(
-                              (a) =>
-                                  a.type == EventType.fertilizer.toString() &&
-                                  a.isActive == true,
-                            )
-                            .toList();
-                    return ItemListTab(
-                      items: fertilizers,
-                      emptyMessage: "No fertilizers added yet",
-                    );
-                  },
-                ),
+                  // Fertilizers tab
+                  accessoriesAsync.when(
+                    loading:
+                        () => const Center(child: CircularProgressIndicator()),
+                    error:
+                        (e, st) => Center(
+                          child: Text("Error loading fertilizers: $e"),
+                        ),
+                    data: (data) {
+                      final fertilizers =
+                          data
+                              .where(
+                                (a) =>
+                                    a.type == EventType.fertilizer.toString() &&
+                                    a.isActive,
+                              )
+                              .toList();
+                      return ItemListTab(
+                        items: fertilizers,
+                        emptyMessage: "No fertilizers added yet",
+                      );
+                    },
+                  ),
 
-                // Pesticides tab
-                accessoriesAsync.when(
-                  loading:
-                      () => const Center(child: CircularProgressIndicator()),
-                  error: (e, st) {
-                    return Center(child: Text("Error loading pesticides: $e"));
-                  },
-                  data: (data) {
-                    final pesticides =
-                        data
-                            .where(
-                              (a) =>
-                                  a.type == EventType.pesticide.toString() &&
-                                  a.isActive == true,
-                            )
-                            .toList();
-                    return ItemListTab(
-                      items: pesticides,
-                      emptyMessage: "No pesticides added yet",
-                    );
-                  },
-                ),
-              ],
+                  // Pesticides tab
+                  accessoriesAsync.when(
+                    loading:
+                        () => const Center(child: CircularProgressIndicator()),
+                    error:
+                        (e, st) =>
+                            Center(child: Text("Error loading pesticides: $e")),
+                    data: (data) {
+                      final pesticides =
+                          data
+                              .where(
+                                (a) =>
+                                    a.type == EventType.pesticide.toString() &&
+                                    a.isActive,
+                              )
+                              .toList();
+                      return ItemListTab(
+                        items: pesticides,
+                        emptyMessage: "No pesticides added yet",
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
-
-          ElevatedButton(
-            child: Text(
-              _tabController.index == 0
-                  ? "Add Plant"
-                  : _tabController.index == 1
-                  ? "Add Fertilizer"
-                  : "Add Pesticide",
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+              icon: Icon(Icons.add),
+              label: Text(
+                _tabController.index == 0
+                    ? "add plant"
+                    : _tabController.index == 1
+                    ? "add fertilizer"
+                    : "add pesticide",
+              ),
+              onPressed: () {
+                if (_tabController.index == 0) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const AddPlantScreen()),
+                  );
+                } else if (_tabController.index == 1) {
+                  showAccessoryDialog(context, ref, null, EventType.fertilizer);
+                } else if (_tabController.index == 2) {
+                  showAccessoryDialog(context, ref, null, EventType.pesticide);
+                }
+              },
             ),
-            onPressed: () {
-              if (_tabController.index == 0) {
-                // Add plant
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const AddPlantScreen()),
-                );
-              } else if (_tabController.index == 1) {
-                // Add fertilizer
-                showAccessoryDialog(context, ref, null, EventType.fertilizer);
-              } else if (_tabController.index == 2) {
-                // Add pesticide
-                showAccessoryDialog(context, ref, null, EventType.pesticide);
-              }
-            },
           ),
+          const SizedBox(height: 24), // space at the bottom
         ],
       ),
     );

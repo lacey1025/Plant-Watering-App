@@ -97,10 +97,10 @@ class PlantCardData {
 
   String daysUntilDueStatus() {
     if (!plant.inWateringSchedule) {
-      return "Not in watering schedule";
+      return "not in watering schedule";
     }
     if (schedule == null) {
-      return "No watering frequency recorded";
+      return "no watering frequency recorded";
     }
 
     final lastWateredDate =
@@ -118,12 +118,12 @@ class PlantCardData {
 
     if (today.isBefore(dueDate)) {
       final days = dueDate.difference(today).inDays;
-      return "Within window in $days day${days != 1 ? 's' : ''}";
+      return "due in $days day${days != 1 ? 's' : ''}";
     } else if (today.isAfter(endDate)) {
       final days = today.difference(endDate).inDays;
-      return "Overdue by $days day${days != 1 ? 's' : ''}";
+      return "overdue by $days day${days != 1 ? 's' : ''}";
     } else {
-      return "Within watering window";
+      return "within window";
     }
   }
 }
