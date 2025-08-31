@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/database/plant_app_db.dart';
 import 'package:plant_application/models/enums/event_types_enum.dart';
+import 'package:plant_application/models/plant_card_data.dart';
 import 'package:plant_application/models/repot_data.dart';
 import 'package:plant_application/models/water_event_data.dart';
 import 'package:plant_application/notifier_providers/db_providers.dart';
@@ -9,11 +10,15 @@ import 'package:plant_application/notifier_providers/plant_provider.dart';
 import 'package:plant_application/screens/add_plant/add_plant_screen.dart';
 import 'package:plant_application/screens/add_plant/plant_form_data.dart';
 import 'package:plant_application/screens/home/home_screen.dart';
+import 'package:plant_application/screens/shared/background_scaffold.dart';
+import 'package:plant_application/screens/shared/custom_tab_bar.dart';
+import 'package:plant_application/screens/shared/fake_blur.dart';
 import 'package:plant_application/screens/view_plant/widgets/banner_widget.dart';
 import 'package:plant_application/screens/view_plant/widgets/delete_dialog.dart';
 import 'package:plant_application/screens/view_plant/widgets/event_section_widget.dart';
 import 'package:plant_application/screens/view_plant/widgets/photo_reminder_banner.dart';
 import 'package:plant_application/screens/view_plant/widgets/plant_app_bar.dart';
+import 'package:plant_application/theme.dart';
 import 'package:plant_application/utils/datetime_extensions.dart';
 
 class ViewPlant extends ConsumerStatefulWidget {
@@ -43,9 +48,6 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
   @override
   Widget build(BuildContext context) {
     final plantAsync = ref.watch(plantNotifierProvider(widget.plantId));
-    final plantNotifier = ref.read(
-      plantNotifierProvider(widget.plantId).notifier,
-    );
     final wateringAsync = ref.watch(
       wateringEventsForPlantProvider(widget.plantId),
     );
@@ -54,7 +56,7 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
       pesticideEventsForPlantProvider(widget.plantId),
     );
 
-    return Scaffold(
+    return BackgroundScaffold(
       appBar: PlantAppBar(plantId: widget.plantId, plantAsync: plantAsync),
       body: plantAsync.when(
         data: (plant) {
@@ -66,96 +68,97 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
             children: [
               if (plant.plant.inWateringSchedule) BannerWidget(plant: plant),
 
-              // Plant details section
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (plant.plant.notes != null &&
-                        plant.plant.notes!.isNotEmpty) ...[
-                      Text("Notes: ${plant.plant.notes}"),
-                      const SizedBox(height: 8),
-                    ],
-                    if (plant.schedule != null) ...[
-                      Text("Water every ${plant.schedule!.frequency} days"),
-                      const SizedBox(height: 8),
-                    ],
-                  ],
-                ),
-              ),
-
-              // Tab bar
-              TabBar(
-                controller: _tabController,
-                tabs: const [
-                  Tab(text: "Watering"),
-                  Tab(text: "Repot"),
-                  Tab(text: "Pesticide"),
-                ],
-              ),
-
-              // Tab content - takes remaining space
+              // Scrollable main area
               Expanded(
-                child: TabBarView(
-                  controller: _tabController,
+                child: Column(
                   children: [
-                    // Watering tab
-                    wateringAsync.when(
-                      data: (events) {
-                        return SizedBox(
-                          height: 200,
-                          child: EventSection<List<WaterEventData>>(
-                            title: "Watering History",
-                            plantId: plant.plant.id,
-                            events: events,
-                            eventType: EventType.watering,
-                          ),
-                        );
-                      },
-                      loading:
-                          () =>
-                              const Center(child: CircularProgressIndicator()),
-                      error: (e, st) => Center(child: Text('Error: $e')),
+                    // Notes & schedule card
+                    if ((plant.plant.notes?.isNotEmpty ?? false) ||
+                        plant.schedule != null)
+                      Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: NotesCard(plant: plant),
+                      ),
+
+                    // Tabs
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: CustomTabBar(
+                        controller: _tabController,
+                        tabs: const ["watering", "repot", "pesticide"],
+                        reverse: true,
+                      ),
                     ),
 
-                    // Repot tab
-                    repotAsync.when(
-                      data: (events) {
-                        return SizedBox(
-                          height: 200,
-                          child: EventSection<List<RepotData>>(
-                            title: "Repot History",
-                            plantId: plant.plant.id,
-                            events: events,
-                            eventType: EventType.repot,
+                    // Expand tabs to fill space
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: FakeBlur(
+                          overlay: AppColors.secondaryGreen.withAlpha(150),
+                          // color: AppColors.secondaryGreen,
+                          child: TabBarView(
+                            controller: _tabController,
+                            children: [
+                              wateringAsync.when(
+                                data:
+                                    (events) =>
+                                        EventSection<List<WaterEventData>>(
+                                          title: "watering history",
+                                          plantId: plant.plant.id,
+                                          events: events,
+                                          eventType: EventType.watering,
+                                        ),
+                                loading:
+                                    () => const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                error:
+                                    (e, st) => Center(child: Text('Error: $e')),
+                              ),
+                              repotAsync.when(
+                                data:
+                                    (events) => EventSection<List<RepotData>>(
+                                      title: "repot history",
+                                      plantId: plant.plant.id,
+                                      events: events,
+                                      eventType: EventType.repot,
+                                    ),
+                                loading:
+                                    () => const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                error:
+                                    (e, st) => Center(child: Text('Error: $e')),
+                              ),
+                              pesticideAsync.when(
+                                data:
+                                    (events) => EventSection<List<Event>>(
+                                      title: "pesticide history",
+                                      plantId: plant.plant.id,
+                                      events: events,
+                                      eventType: EventType.pesticide,
+                                    ),
+                                loading:
+                                    () => const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                error:
+                                    (e, st) => Center(child: Text('Error: $e')),
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                      loading:
-                          () =>
-                              const Center(child: CircularProgressIndicator()),
-                      error: (e, st) => Center(child: Text('Error: $e')),
-                    ),
-
-                    // Pesticide tab
-                    pesticideAsync.when(
-                      data: (events) {
-                        return EventSection<List<Event>>(
-                          title: "Pesticide History",
-                          plantId: plant.plant.id,
-                          events: events,
-                          eventType: EventType.pesticide,
-                        );
-                      },
-                      loading:
-                          () =>
-                              const Center(child: CircularProgressIndicator()),
-                      error: (e, st) => Center(child: Text('Error: $e')),
+                        ),
+                      ),
                     ),
                   ],
                 ),
+              ),
+
+              // Bottom buttons
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: BottomButtons(plant: plant),
               ),
             ],
           );
@@ -163,75 +166,110 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('Error: $e')),
       ),
-      bottomSheet: plantAsync.when(
-        data: (plant) {
-          if (plant == null) return const SizedBox.shrink();
-          return Container(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                PhotoReminderBanner(
-                  dateAdded: DateTimeHelpers.dateStringToDateTime(
-                    plant.plant.dateAdded,
-                  ),
-                  plantId: plant.plant.id,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () async {
-                          final confirmed = await showDialog<bool>(
-                            context: context,
-                            builder:
-                                (context) =>
-                                    DeleteDialog(itemName: plant.plant.name),
-                          );
-                          if (confirmed == true) {
-                            await plantNotifier.deletePlant();
-                            if (context.mounted) {
-                              Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(builder: (_) => HomeScreen()),
-                              );
-                            }
-                          }
-                        },
-                        child: const Text("Delete Plant"),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          final plantForm = PlantFormData(
-                            id: plant.plant.id,
-                            name: plant.plant.name,
-                            inSchedule: plant.plant.inWateringSchedule,
-                            notes: plant.plant.notes ?? '',
-                            frequency:
-                                plant.schedule?.frequency.toDouble() ?? 7,
-                          );
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => AddPlantScreen(form: plantForm),
-                            ),
-                          );
-                        },
-                        child: const Text("Edit Plant"),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
-            ),
-          );
-        },
-        loading: () => const SizedBox.shrink(),
-        error: (e, st) => const SizedBox.shrink(),
+    );
+  }
+}
+
+class NotesCard extends StatelessWidget {
+  final PlantCardData plant;
+  const NotesCard({super.key, required this.plant});
+
+  @override
+  Widget build(BuildContext context) {
+    return FakeBlur(
+      borderRadius: 16,
+      overlay: Colors.white54,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (plant.plant.notes?.isNotEmpty ?? false)
+              Text(
+                plant.plant.notes!,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppColors.darkTextPink),
+              ),
+            if (plant.schedule != null)
+              Text(
+                "Water every ${plant.schedule!.frequency} days",
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppColors.darkTextPink),
+              ),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class BottomButtons extends ConsumerWidget {
+  final PlantCardData plant;
+  const BottomButtons({super.key, required this.plant});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(plantNotifierProvider(plant.plant.id).notifier);
+
+    return Column(
+      children: [
+        PhotoReminderBanner(
+          dateAdded: DateTimeHelpers.dateStringToDateTime(
+            plant.plant.dateAdded,
+          ),
+          plantId: plant.plant.id,
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.secondaryBlue,
+                  foregroundColor: AppColors.darkTextBlue,
+                ),
+                onPressed: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (_) => DeleteDialog(itemName: plant.plant.name),
+                  );
+                  if (confirmed == true && context.mounted) {
+                    await notifier.deletePlant();
+                    if (context.mounted) {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (_) => HomeScreen()),
+                      );
+                    }
+                  }
+                },
+                child: const Text("delete plant"),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: FilledButton(
+                onPressed: () {
+                  final plantForm = PlantFormData(
+                    id: plant.plant.id,
+                    name: plant.plant.name,
+                    inSchedule: plant.plant.inWateringSchedule,
+                    notes: plant.plant.notes ?? '',
+                    frequency: plant.schedule?.frequency.toDouble() ?? 7,
+                  );
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => AddPlantScreen(form: plantForm),
+                    ),
+                  );
+                },
+                child: const Text("edit plant"),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

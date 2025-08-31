@@ -7,6 +7,7 @@ import 'package:plant_application/screens/add_plant/widgets/image_source_sheet.d
 import 'package:plant_application/screens/add_plant/plant_form_data.dart';
 import 'package:plant_application/screens/add_plant/plant_form_notifier.dart';
 import 'package:plant_application/screens/home/home_screen.dart';
+import 'package:plant_application/theme.dart';
 
 class AddPlantScreen extends ConsumerStatefulWidget {
   const AddPlantScreen({super.key, this.form});
@@ -81,6 +82,7 @@ class _AddPlantScreenState extends ConsumerState<AddPlantScreen> {
   Future<void> _showImageSourceActionSheet(BuildContext context) async {
     showModalBottomSheet(
       context: context,
+      backgroundColor: AppColors.secondaryBlue,
       builder:
           (context) => ImageSourceSheet(
             onImageSelected: (image) {

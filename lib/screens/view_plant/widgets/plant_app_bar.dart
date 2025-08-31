@@ -5,6 +5,7 @@ import 'package:plant_application/models/plant_card_data.dart';
 import 'package:plant_application/notifier_providers/primary_photo_provider.dart';
 import 'package:plant_application/screens/add_photo/add_photo_screen.dart';
 import 'package:plant_application/screens/view_plant/widgets/photo_carousel_dialog.dart';
+import 'package:plant_application/theme.dart';
 import 'package:plant_application/utils/shadows.dart';
 
 class PlantAppBar extends ConsumerWidget implements PreferredSizeWidget {
@@ -72,7 +73,7 @@ class PlantAppBar extends ConsumerWidget implements PreferredSizeWidget {
                   )
                 else
                   Container(
-                    color: Theme.of(context).primaryColor,
+                    color: AppColors.primaryBlue,
                     child: Center(
                       child: Icon(
                         Icons.photo_camera,
@@ -84,47 +85,18 @@ class PlantAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
                 // Dim overlay for better text readability
                 Container(color: Colors.black12),
-
-                // Title positioned at bottom of the extended app bar
                 Positioned(
-                  bottom: 16,
-                  left: 56, // Account for back button width
-                  right: 16,
+                  bottom: 8,
+                  right: 24,
                   child: plantAsync.when(
                     data:
                         (plant) => Text(
                           plant == null ? "View Plant" : plant.plant.name,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w500,
+                          style: Theme.of(
+                            context,
+                          ).appBarTheme.titleTextStyle!.copyWith(
                             shadows:
-                                backgroundPhoto != null
-                                    ? getShadows()
-                                    // backgroundPhoto != null
-                                    //     ? [
-                                    //       const Shadow(
-                                    //         offset: Offset(1, 1),
-                                    //         blurRadius: 20,
-                                    //         color: Color.fromARGB(100, 0, 0, 0),
-                                    //       ),
-                                    //       const Shadow(
-                                    //         offset: Offset(-1, 1),
-                                    //         blurRadius: 20,
-                                    //         color: Color.fromARGB(100, 0, 0, 0),
-                                    //       ),
-                                    //       const Shadow(
-                                    //         offset: Offset(1, -1),
-                                    //         blurRadius: 20,
-                                    //         color: Color.fromARGB(100, 0, 0, 0),
-                                    //       ),
-                                    //       const Shadow(
-                                    //         offset: Offset(-1, -1),
-                                    //         blurRadius: 20,
-                                    //         color: Color.fromARGB(100, 0, 0, 0),
-                                    //       ),
-                                    //     ]
-                                    : null,
+                                backgroundPhoto != null ? getShadows() : null,
                           ),
                         ),
                     loading:

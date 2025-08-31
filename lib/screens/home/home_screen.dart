@@ -111,7 +111,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               .toList();
                       return ItemListTab(
                         items: fertilizers,
-                        emptyMessage: "No fertilizers added yet",
+                        emptyMessage: "no fertilizers added yet",
                       );
                     },
                   ),
@@ -134,7 +134,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               .toList();
                       return ItemListTab(
                         items: pesticides,
-                        emptyMessage: "No pesticides added yet",
+                        emptyMessage: "no pesticides added yet",
                       );
                     },
                   ),

@@ -19,7 +19,15 @@ class ItemListTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (items.isEmpty) {
-      return Center(child: Text(emptyMessage));
+      return Center(
+        child: Text(
+          emptyMessage,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: AppColors.darkTextGreen,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      );
     }
 
     final notifier = ref.read(accessoriesNotifierProvider.notifier);

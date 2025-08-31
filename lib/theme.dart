@@ -37,6 +37,11 @@ ThemeData primaryTheme = ThemeData(
       color: Colors.white,
       fontWeight: FontWeight.w700,
     ),
+    titleMedium: GoogleFonts.inter(
+      fontSize: 22,
+      color: Colors.white,
+      fontWeight: FontWeight.w700,
+    ),
     // labelLarge: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold),
   ),
 
@@ -151,10 +156,11 @@ ThemeData primaryTheme = ThemeData(
     ),
   ),
 
-  // dividerTheme: DividerThemeData(
-  //   color: Colors.grey[700],
-  //   thickness: 1,
-  //   indent: 0,
-  //   endIndent: 0,
-  // ),
+  dividerTheme: DividerThemeData(
+    color: AppColors.primaryGreen,
+    space: 0,
+    thickness: 1,
+    indent: 0,
+    endIndent: 0,
+  ),
 );

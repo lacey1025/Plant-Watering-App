@@ -6,12 +6,14 @@ class CustomTabBar extends StatelessWidget implements PreferredSizeWidget {
   final List<String> tabs;
   final TabController controller;
   final double height;
+  final bool reverse;
 
   const CustomTabBar({
     super.key,
     required this.tabs,
     required this.controller,
     this.height = 40,
+    this.reverse = false,
   });
 
   @override
@@ -19,7 +21,7 @@ class CustomTabBar extends StatelessWidget implements PreferredSizeWidget {
     return Container(
       height: height,
       decoration: BoxDecoration(
-        color: AppColors.secondaryGreen,
+        color: reverse ? AppColors.primaryGreen : AppColors.secondaryGreen,
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(8),
           bottom: Radius.zero,
@@ -30,14 +32,16 @@ class CustomTabBar extends StatelessWidget implements PreferredSizeWidget {
         controller: controller,
         labelPadding: EdgeInsets.zero,
         indicator: BoxDecoration(
-          color: AppColors.primaryGreen,
+          color: reverse ? AppColors.secondaryGreen : AppColors.primaryGreen,
           borderRadius: BorderRadius.vertical(
             top: Radius.circular(8),
             bottom: Radius.zero,
           ),
         ),
-        labelColor: AppColors.lightTextGreen,
-        unselectedLabelColor: AppColors.darkTextGreen,
+        labelColor:
+            reverse ? AppColors.darkTextGreen : AppColors.lightTextGreen,
+        unselectedLabelColor:
+            reverse ? AppColors.lightTextGreen : AppColors.darkTextGreen,
         tabs:
             tabs
                 .map(

@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 class BackgroundScaffold extends StatelessWidget {
   final Widget body;
   final PreferredSizeWidget? appBar;
+  final Widget? bottomSheet;
   final Widget? floatingActionButton;
 
   const BackgroundScaffold({
     super.key,
     required this.body,
     this.appBar,
+    this.bottomSheet,
     this.floatingActionButton,
   });
 
@@ -16,6 +18,7 @@ class BackgroundScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: appBar,
+      bottomSheet: bottomSheet,
       floatingActionButton: floatingActionButton,
       body: Stack(
         children: [

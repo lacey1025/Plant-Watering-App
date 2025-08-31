@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:plant_application/theme.dart';
 
 class ImageSourceSheet extends StatelessWidget {
   final void Function(XFile? image) onImageSelected;
@@ -12,8 +13,13 @@ class ImageSourceSheet extends StatelessWidget {
       child: Wrap(
         children: [
           ListTile(
-            leading: const Icon(Icons.camera_alt),
-            title: const Text('Take a photo'),
+            leading: Icon(Icons.camera_alt, color: AppColors.darkTextBlue),
+            title: Text(
+              'Take a photo',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.darkTextBlue),
+            ),
             onTap: () async {
               final picker = ImagePicker();
               final picked = await picker.pickImage(source: ImageSource.camera);
@@ -21,8 +27,13 @@ class ImageSourceSheet extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.photo_library),
-            title: const Text('Choose from gallery'),
+            leading: Icon(Icons.photo_library, color: AppColors.darkTextBlue),
+            title: Text(
+              'Choose from gallery',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.darkTextBlue),
+            ),
             onTap: () async {
               final picker = ImagePicker();
               final picked = await picker.pickImage(

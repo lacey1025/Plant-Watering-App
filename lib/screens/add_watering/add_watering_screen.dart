@@ -48,6 +48,7 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
         );
         notifier.loadForEdit(widget.editData!);
       });
+      _notesController.text = widget.editData?.notes ?? '';
     }
   }
 
