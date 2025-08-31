@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:plant_application/theme.dart';
 
 class DeleteDialog extends StatelessWidget {
   final String? itemName;
@@ -7,21 +8,23 @@ class DeleteDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Confirm Delete'),
+      title: const Text('confirm delete'),
       content: Text(
         itemName != null
-            ? 'Are you sure you want to delete $itemName?'
-            : 'Are you sure you want to delete this plant?',
+            ? 'are you sure you want to delete $itemName?'
+            : 'are you sure you want to delete this plant?',
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
+          child: const Text('cancel'),
         ),
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(true),
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-          child: const Text('Delete'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryPink,
+          ),
+          child: const Text('delete'),
         ),
       ],
     );

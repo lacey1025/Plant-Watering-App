@@ -3,13 +3,13 @@ import 'package:flutter/scheduler.dart';
 
 class FakeBlur extends StatefulWidget {
   final Widget child;
-  final double borderRadius;
+  final BorderRadius borderRadius;
   final Color? overlay;
 
   const FakeBlur({
     super.key,
     required this.child,
-    this.borderRadius = 16,
+    this.borderRadius = const BorderRadius.all(Radius.circular(16)),
     this.overlay,
   });
 
@@ -60,11 +60,6 @@ class _FakeBlurState extends State<FakeBlur> {
           containerGlobalOffset.dx, // x position relative to screen left
           containerGlobalOffset.dy -
               bodyStartY, // y position relative to body start
-        );
-
-        debugPrint('App bar height: $appBarHeight, Body start Y: $bodyStartY');
-        debugPrint(
-          'Container global: $containerGlobalOffset, Calculated offset: $newOffsetInScaffoldBody',
         );
 
         // Always update if values changed
@@ -142,13 +137,13 @@ class _FakeBlurState extends State<FakeBlur> {
     return Stack(
       children: [
         // The child widget with key - this determines our actual size and position
-        Container(key: _containerKey, child: widget.child),
+        Container(key: _containerKey),
 
         // Blur background positioned behind child and clipped to child's bounds
         if (_scaffoldBodySize.width > 0 && _scaffoldBodySize.height > 0)
           Positioned.fill(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(widget.borderRadius),
+              borderRadius: widget.borderRadius,
               child: Stack(
                 children: [
                   Positioned(
@@ -178,16 +173,13 @@ class _FakeBlurState extends State<FakeBlur> {
         if (widget.overlay != null)
           Positioned.fill(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(widget.borderRadius),
+              borderRadius: widget.borderRadius,
               child: Container(color: widget.overlay!),
             ),
           ),
 
         // Child content on top
-        ClipRRect(
-          borderRadius: BorderRadius.circular(widget.borderRadius),
-          child: widget.child,
-        ),
+        ClipRRect(borderRadius: widget.borderRadius, child: widget.child),
       ],
     );
   }

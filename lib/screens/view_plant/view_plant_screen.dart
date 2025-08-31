@@ -96,6 +96,10 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
                         padding: EdgeInsets.symmetric(horizontal: 8),
                         child: FakeBlur(
                           overlay: AppColors.secondaryGreen.withAlpha(150),
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(16),
+                            bottomRight: Radius.circular(16),
+                          ),
                           // color: AppColors.secondaryGreen,
                           child: TabBarView(
                             controller: _tabController,
@@ -177,7 +181,7 @@ class NotesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FakeBlur(
-      borderRadius: 16,
+      borderRadius: BorderRadius.zero,
       overlay: Colors.white54,
       child: Padding(
         padding: const EdgeInsets.all(12),
