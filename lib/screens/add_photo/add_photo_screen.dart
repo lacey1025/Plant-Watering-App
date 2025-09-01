@@ -89,7 +89,7 @@ class _AddPhotoScreenState extends ConsumerState<AddPhotoScreen> {
         plantId: Value(widget.plantId),
         filePath: Value(photoPath),
         date: Value(_pickedDate.toString()),
-        notes: Value(notes),
+        notes: notes.isNotEmpty ? Value(notes) : Value.absent(),
         isPrimary: Value(_isPrimary),
       );
       notifier.insertPhoto(photoCompanion);
@@ -98,7 +98,7 @@ class _AddPhotoScreenState extends ConsumerState<AddPhotoScreen> {
       final photoCompanion = PhotosCompanion(
         id: Value(widget.initialData!.id),
         date: Value(_pickedDate.toString()),
-        notes: Value(notes),
+        notes: notes.isNotEmpty ? Value(notes) : Value.absent(),
         isPrimary: Value(_isPrimary),
       );
       notifier.updatePhoto(photoCompanion);

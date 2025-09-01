@@ -120,7 +120,7 @@ class WateringFormData {
     return RepotEventsCompanion(
       eventId: Value(eventId),
       potSize: Value(potSize),
-      soilType: Value(soilType),
+      soilType: soilType.isNotEmpty ? Value(soilType) : Value.absent(),
     );
   }
 

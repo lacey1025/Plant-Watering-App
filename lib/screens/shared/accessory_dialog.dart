@@ -24,7 +24,7 @@ Future<int?> showAccessoryDialog(
       return AlertDialog(
         scrollable: true,
         title: Text(
-          '${item == null ? "add" : "edit"} ${type == EventType.watering ? "Water Type" : type.toString()}',
+          '${item == null ? "add" : "edit"} ${type == EventType.watering ? "water type" : type.toString()}',
         ),
         content: SizedBox(
           width: MediaQuery.of(context).size.width * 0.9,
@@ -82,7 +82,10 @@ Future<int?> showAccessoryDialog(
                   id: Value.absentIfNull(item?.id),
                   type: Value(type.toString()),
                   name: Value(updatedName),
-                  notes: Value(updatedNotes),
+                  notes:
+                      updatedNotes.isNotEmpty
+                          ? Value(updatedNotes)
+                          : Value.absent(),
                   isActive: Value(true),
                 );
                 int? insertedId;

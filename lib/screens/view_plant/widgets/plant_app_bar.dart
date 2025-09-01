@@ -62,7 +62,6 @@ class PlantAppBar extends ConsumerWidget implements PreferredSizeWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                // Background image or color
                 if (backgroundPhoto != null)
                   Image.file(
                     File(backgroundPhoto.filePath),
@@ -74,16 +73,19 @@ class PlantAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 else
                   Container(
                     color: AppColors.primaryBlue,
-                    child: Center(
-                      child: Icon(
-                        Icons.photo_camera,
-                        color: Colors.white12,
-                        size: 48,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: Padding(
+                        padding: EdgeInsets.only(top: preferredSize.height / 2),
+                        child: Icon(
+                          Icons.photo_camera,
+                          color: Colors.white12,
+                          size: 48,
+                        ),
                       ),
                     ),
                   ),
 
-                // Dim overlay for better text readability
                 Container(color: Colors.black12),
                 Positioned(
                   bottom: 8,
@@ -114,7 +116,6 @@ class PlantAppBar extends ConsumerWidget implements PreferredSizeWidget {
               ],
             ),
           ),
-          // Make sure the back button and any actions are visible
           foregroundColor: Colors.white,
         );
       },

@@ -128,7 +128,7 @@ class WateringFormNotifier extends StateNotifier<WateringFormData> {
       final db = ref.read(databaseProvider);
       final wateringEventCompanion = EventsCompanion(
         date: Value(state.date.dateTimeToDateString()),
-        notes: Value(state.notes),
+        notes: state.notes.isNotEmpty ? Value(state.notes) : Value.absent(),
       );
 
       await db.transaction(() async {

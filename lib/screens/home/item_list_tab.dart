@@ -16,6 +16,32 @@ class ItemListTab extends ConsumerWidget {
     required this.emptyMessage,
   });
 
+  ({Color textColor, Color fillColor}) _getColor(int index) {
+    final num = index % 4;
+    switch (num) {
+      case 0:
+        return (
+          textColor: AppColors.lightTextPink,
+          fillColor: AppColors.primaryPink,
+        );
+      case 1:
+        return (
+          textColor: AppColors.lightTextYellow,
+          fillColor: AppColors.primaryYellow,
+        );
+      case 2:
+        return (
+          textColor: AppColors.lightTextGreen,
+          fillColor: AppColors.primaryGreen,
+        );
+      default:
+        return (
+          textColor: AppColors.lightTextBlue,
+          fillColor: AppColors.primaryBlue,
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (items.isEmpty) {
@@ -35,12 +61,10 @@ class ItemListTab extends ConsumerWidget {
     return ListView.builder(
       itemCount: items.length,
       itemBuilder: (context, index) {
+        final colors = _getColor(index);
         final item = items[index];
         return Card(
-          color:
-              item.type == EventType.fertilizer.toString()
-                  ? AppColors.primaryYellow
-                  : AppColors.primaryPink,
+          color: colors.fillColor,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
             child: Row(
@@ -59,10 +83,7 @@ class ItemListTab extends ConsumerWidget {
                       Text(
                         item.notes ?? "",
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color:
-                              item.type == EventType.fertilizer.toString()
-                                  ? AppColors.lightTextYellow
-                                  : AppColors.lightTextPink,
+                          color: colors.textColor,
                         ),
                         softWrap: true,
                       ),
@@ -73,7 +94,7 @@ class ItemListTab extends ConsumerWidget {
                 IconButton(
                   padding: EdgeInsets.only(left: 8),
                   iconSize: 20,
-                  color: Colors.white,
+                  color: colors.textColor,
                   icon: const Icon(Icons.edit),
                   onPressed: () {
                     final type = EventType.toEvent(item.type);
@@ -83,7 +104,7 @@ class ItemListTab extends ConsumerWidget {
                 ),
                 IconButton(
                   iconSize: 20,
-                  color: Colors.white,
+                  color: colors.textColor,
                   icon: const Icon(Icons.delete),
                   onPressed: () {
                     notifier.deleteAccessory(item.id);

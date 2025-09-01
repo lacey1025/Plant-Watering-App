@@ -84,7 +84,7 @@ class PlantFormData {
     return PlantsCompanion(
       name: Value(name),
       inWateringSchedule: Value(inSchedule),
-      notes: Value(notes),
+      notes: notes.isNotEmpty ? Value(notes) : Value.absent(),
       dateAdded: Value(DateTime.now().dateTimeToDateString()),
     );
   }

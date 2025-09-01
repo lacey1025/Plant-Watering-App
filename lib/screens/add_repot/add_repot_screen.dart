@@ -77,7 +77,7 @@ class _AddRepotScreenState extends ConsumerState<AddRepotScreen> {
           _pickedDate.day,
         ).dateTimeToDateString(),
       ),
-      notes: Value(notes),
+      notes: notes.isNotEmpty ? Value(notes) : Value.absent(),
     );
 
     final db = ref.read(databaseProvider);
@@ -92,7 +92,7 @@ class _AddRepotScreenState extends ConsumerState<AddRepotScreen> {
     final repotEvent = RepotEventsCompanion(
       eventId: Value(eventId),
       potSize: Value(potSize),
-      soilType: Value(soilType),
+      soilType: soilType.isNotEmpty ? Value(soilType) : Value.absent(),
     );
 
     if (!isEdit) {

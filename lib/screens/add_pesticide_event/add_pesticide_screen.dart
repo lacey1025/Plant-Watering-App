@@ -95,7 +95,7 @@ class _AddPesticideScreenState extends ConsumerState<AddPesticideScreen> {
           _pickedDate.day,
         ).dateTimeToDateString(),
       ),
-      notes: Value(notes),
+      notes: notes.isNotEmpty ? Value(notes) : Value.absent(),
     );
 
     final db = ref.read(databaseProvider);
