@@ -2,24 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/database/plant_app_db.dart';
 import 'package:plant_application/models/enums/event_types_enum.dart';
-import 'package:plant_application/models/plant_card_data.dart';
 import 'package:plant_application/models/repot_data.dart';
 import 'package:plant_application/models/water_event_data.dart';
 import 'package:plant_application/notifier_providers/db_providers.dart';
 import 'package:plant_application/notifier_providers/plant_provider.dart';
-import 'package:plant_application/screens/add_plant/add_plant_screen.dart';
-import 'package:plant_application/screens/add_plant/plant_form_data.dart';
-import 'package:plant_application/screens/home/home_screen.dart';
 import 'package:plant_application/screens/shared/background_scaffold.dart';
 import 'package:plant_application/screens/shared/custom_tab_bar.dart';
 import 'package:plant_application/screens/shared/fake_blur.dart';
 import 'package:plant_application/screens/view_plant/widgets/banner_widget.dart';
-import 'package:plant_application/screens/view_plant/widgets/delete_dialog.dart';
+import 'package:plant_application/screens/view_plant/widgets/bottom_buttons.dart';
 import 'package:plant_application/screens/view_plant/widgets/event_section_widget.dart';
-import 'package:plant_application/screens/view_plant/widgets/photo_reminder_banner.dart';
+import 'package:plant_application/screens/view_plant/widgets/notes_card.dart';
 import 'package:plant_application/screens/view_plant/widgets/plant_app_bar.dart';
 import 'package:plant_application/theme.dart';
-import 'package:plant_application/utils/datetime_extensions.dart';
 
 class ViewPlant extends ConsumerStatefulWidget {
   final int plantId;
@@ -170,110 +165,6 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('Error: $e')),
       ),
-    );
-  }
-}
-
-class NotesCard extends StatelessWidget {
-  final PlantCardData plant;
-  const NotesCard({super.key, required this.plant});
-
-  @override
-  Widget build(BuildContext context) {
-    return FakeBlur(
-      borderRadius: BorderRadius.zero,
-      overlay: Colors.white54,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (plant.plant.notes?.isNotEmpty ?? false)
-              Text(
-                plant.plant.notes!,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: AppColors.darkTextPink),
-              ),
-            if (plant.schedule != null)
-              Text(
-                "Water every ${plant.schedule!.frequency} days",
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: AppColors.darkTextPink),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class BottomButtons extends ConsumerWidget {
-  final PlantCardData plant;
-  const BottomButtons({super.key, required this.plant});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(plantNotifierProvider(plant.plant.id).notifier);
-
-    return Column(
-      children: [
-        PhotoReminderBanner(
-          dateAdded: DateTimeHelpers.dateStringToDateTime(
-            plant.plant.dateAdded,
-          ),
-          plantId: plant.plant.id,
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.secondaryBlue,
-                  foregroundColor: AppColors.darkTextBlue,
-                ),
-                onPressed: () async {
-                  final confirmed = await showDialog<bool>(
-                    context: context,
-                    builder: (_) => DeleteDialog(itemName: plant.plant.name),
-                  );
-                  if (confirmed == true && context.mounted) {
-                    await notifier.deletePlant();
-                    if (context.mounted) {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (_) => HomeScreen()),
-                      );
-                    }
-                  }
-                },
-                child: const Text("delete plant"),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: FilledButton(
-                onPressed: () {
-                  final plantForm = PlantFormData(
-                    id: plant.plant.id,
-                    name: plant.plant.name,
-                    inSchedule: plant.plant.inWateringSchedule,
-                    notes: plant.plant.notes ?? '',
-                    frequency: plant.schedule?.frequency.toDouble() ?? 7,
-                  );
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => AddPlantScreen(form: plantForm),
-                    ),
-                  );
-                },
-                child: const Text("edit plant"),
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 }

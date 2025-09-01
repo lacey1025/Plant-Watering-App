@@ -107,7 +107,7 @@ ThemeData primaryTheme = ThemeData(
 
   textSelectionTheme: TextSelectionThemeData(
     cursorColor: AppColors.darkTextBlue,
-    selectionColor: AppColors.darkTextBlue,
+    selectionColor: AppColors.darkTextBlue.withAlpha(80),
     selectionHandleColor: AppColors.darkTextBlue,
   ),
 
@@ -141,6 +141,56 @@ ThemeData primaryTheme = ThemeData(
     ),
   ),
 
+  datePickerTheme: DatePickerThemeData(
+    weekdayStyle: TextStyle(
+      color: AppColors.darkTextBlue,
+      fontWeight: FontWeight.bold,
+    ),
+
+    backgroundColor: AppColors.secondaryBlue,
+    dividerColor: AppColors.primaryBlue,
+    headerBackgroundColor: AppColors.primaryBlue,
+    headerForegroundColor: Colors.white,
+    dayBackgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+      if (states.contains(WidgetState.selected)) {
+        return AppColors.primaryBlue;
+      }
+      return null;
+    }),
+    dayForegroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+      if (states.contains(WidgetState.selected)) {
+        return Colors.white;
+      }
+      return AppColors.primaryBlue;
+    }),
+    yearBackgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+      if (states.contains(WidgetState.selected)) {
+        return AppColors.primaryBlue;
+      }
+      return null;
+    }),
+    yearForegroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+      if (states.contains(WidgetState.selected)) {
+        return Colors.white;
+      }
+      return AppColors.primaryBlue;
+    }),
+    todayBackgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+      if (states.contains(WidgetState.selected)) {
+        return AppColors.primaryBlue;
+      }
+      return null;
+    }),
+    todayForegroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+      if (states.contains(WidgetState.selected)) {
+        return Colors.white;
+      }
+      return AppColors.darkTextBlue;
+    }),
+    rangeSelectionBackgroundColor: AppColors.secondaryBlue.withAlpha(50),
+    rangeSelectionOverlayColor: WidgetStateProperty.all(AppColors.primaryBlue),
+  ),
+
   dialogTheme: DialogTheme(
     elevation: 0,
     backgroundColor: AppColors.secondaryBlue,
@@ -164,3 +214,22 @@ ThemeData primaryTheme = ThemeData(
     endIndent: 0,
   ),
 );
+
+// InputDecoration inputDecoration(
+//   String label,
+//   Color fillColor,
+//   Color textColor,
+// ) {
+//   return InputDecoration(
+//     filled: true,
+//     fillColor: fillColor,
+//     enabledBorder: UnderlineInputBorder(
+//       borderSide: BorderSide(color: textColor, width: 1),
+//     ),
+//     focusedBorder: UnderlineInputBorder(
+//       borderSide: BorderSide(color: textColor, width: 2),
+//     ),
+//     labelText: label,
+//     labelStyle: TextStyle(color: textColor),
+//   );
+// }

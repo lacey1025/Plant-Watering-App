@@ -35,25 +35,14 @@ class _FakeBlurState extends State<FakeBlur> {
         final screenSize = MediaQuery.of(context).size;
         final statusBarHeight = MediaQuery.of(context).viewPadding.top;
 
-        // Get the actual app bar height from the current scaffold
-        double appBarHeight = 0;
-        try {
-          final scaffoldState = Scaffold.of(context);
-          appBarHeight = scaffoldState.appBarMaxHeight ?? 0;
-        } catch (e) {
-          // No scaffold found, app bar height remains 0
-        }
-
-        // In your BackgroundScaffold, the background image is in the body area
-        // So it covers: screen width x (screen height - status bar - app bar)
-        final bodyHeight = screenSize.height - statusBarHeight - appBarHeight;
+        final bodyHeight = screenSize.height - statusBarHeight;
         final newScaffoldBodySize = Size(screenSize.width, bodyHeight);
 
         // Get this widget's global position
         final containerGlobalOffset = renderBox.localToGlobal(Offset.zero);
 
         // The body (where background image starts) begins at statusBarHeight + appBarHeight
-        final bodyStartY = statusBarHeight + appBarHeight;
+        final bodyStartY = statusBarHeight;
 
         // Calculate offset relative to the body start (where your background image begins)
         final newOffsetInScaffoldBody = Offset(

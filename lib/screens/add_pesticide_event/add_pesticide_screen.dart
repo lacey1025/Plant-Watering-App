@@ -7,6 +7,11 @@ import 'package:plant_application/models/pesticide_event_data.dart';
 import 'package:plant_application/notifier_providers/accessories_provider.dart';
 import 'package:plant_application/notifier_providers/db_providers.dart';
 import 'package:plant_application/screens/shared/accessory_dialog.dart';
+import 'package:plant_application/screens/shared/background_scaffold.dart';
+import 'package:plant_application/screens/shared/custom_app_bar.dart';
+import 'package:plant_application/screens/shared/fake_blur.dart';
+import 'package:plant_application/screens/shared/text_form_field.dart';
+import 'package:plant_application/theme.dart';
 import 'package:plant_application/utils/datetime_extensions.dart';
 
 class AddPesticideScreen extends ConsumerStatefulWidget {
@@ -24,6 +29,8 @@ class AddPesticideScreen extends ConsumerStatefulWidget {
 }
 
 class _AddPesticideScreenState extends ConsumerState<AddPesticideScreen> {
+  final GlobalKey _bottomNavKey = GlobalKey();
+  double _bottomNavHeight = 0;
   final _notesController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final Set<int> _addedPesticides = {};
@@ -41,6 +48,7 @@ class _AddPesticideScreenState extends ConsumerState<AddPesticideScreen> {
   void initState() {
     super.initState();
     final data = widget.initialData;
+    _getBottomNavHeight();
     if (data != null) {
       isEdit = true;
       _notesController.text = data.event.notes ?? '';
@@ -50,6 +58,18 @@ class _AddPesticideScreenState extends ConsumerState<AddPesticideScreen> {
       isEdit = false;
       _pickedDate = DateTime.now();
     }
+  }
+
+  void _getBottomNavHeight() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final RenderBox? renderBox =
+          _bottomNavKey.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox != null) {
+        setState(() {
+          _bottomNavHeight = renderBox.size.height;
+        });
+      }
+    });
   }
 
   Future<void> _pickDate(BuildContext context) async {
@@ -109,181 +129,260 @@ class _AddPesticideScreenState extends ConsumerState<AddPesticideScreen> {
   @override
   Widget build(BuildContext context) {
     final accessoriesAsync = ref.watch(accessoriesNotifierProvider);
-    return Scaffold(
-      appBar: AppBar(title: const Text("Pesticide Event")),
+    return BackgroundScaffold(
+      appBar: CustomAppBar(title: "pesticide event"),
+      bottomNavigatorBar: SafeArea(
+        key: _bottomNavKey,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  child: const Text("submit"),
+                  onPressed: () async {
+                    await _submit();
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                ),
+              ),
+              const SizedBox(height: 4),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.secondaryBlue,
+                    foregroundColor: AppColors.darkTextBlue,
+                  ),
+                  child: const Text("cancel"),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            //
-            accessoriesAsync.when(
-              data: (accessories) {
-                final pesticides =
-                    accessories
-                        .where((a) => a.type == EventType.pesticide.toString())
-                        .toList();
-
-                return Column(
-                  spacing: 8,
+            FakeBlur(
+              borderRadius: BorderRadius.zero,
+              overlay: AppColors.secondaryBlue.withAlpha(200),
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ...pesticides.map((entry) {
-                      final pesticide = entry;
-                      bool isSelected = _addedPesticides.contains(pesticide.id);
+                    //
+                    accessoriesAsync.when(
+                      data: (accessories) {
+                        final pesticides =
+                            accessories
+                                .where(
+                                  (a) =>
+                                      a.type == EventType.pesticide.toString(),
+                                )
+                                .toList();
 
-                      return SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          icon: _removePesticide ? Icon(Icons.close) : null,
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor:
-                                (isSelected || _removePesticide)
-                                    ? Colors.white
-                                    : Theme.of(context).colorScheme.primary,
-                            backgroundColor:
-                                _removePesticide
-                                    ? Theme.of(context).colorScheme.error
-                                    : isSelected
-                                    ? Theme.of(context).colorScheme.primary
-                                    : null,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                        return Column(
+                          spacing: 4,
+                          children: [
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                "pesticides",
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.titleMedium?.copyWith(
+                                  color: AppColors.darkTextBlue,
+                                  fontSize: 20,
+                                ),
+                              ),
                             ),
-                          ),
-                          onPressed: () {
-                            if (!_removePesticide) {
-                              setState(() {
-                                if (isSelected) {
-                                  _addedPesticides.remove(pesticide.id);
-                                } else {
-                                  _addedPesticides.add(pesticide.id);
-                                }
-                              });
-                            } else {
-                              _addedPesticides.clear();
-                              ref
-                                  .read(accessoriesNotifierProvider.notifier)
-                                  .deleteAccessory(pesticide.id);
-                            }
-                          },
-                          label: Text(pesticide.name),
-                        ),
-                      );
-                    }),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        TextButton.icon(
-                          icon: Icon(Icons.add),
-                          style: TextButton.styleFrom(
-                            foregroundColor:
-                                Theme.of(context).colorScheme.primary,
-                            backgroundColor: null,
-                          ),
-                          onPressed: () async {
-                            final newId = await showAccessoryDialog(
-                              context,
-                              ref,
-                              null,
-                              EventType.pesticide,
-                            );
-                            if (newId != null) {
-                              setState(() {
-                                _addedPesticides.add(newId);
-                                _removePesticide = false;
-                              });
-                            }
-                          },
-                          label: Text('Add new'),
-                        ),
-                        if (pesticides.isNotEmpty)
-                          TextButton.icon(
-                            icon:
-                                (_removePesticide)
-                                    ? Icon(Icons.done)
-                                    : Icon(Icons.remove),
-                            style: TextButton.styleFrom(
-                              foregroundColor:
-                                  Theme.of(context).colorScheme.primary,
-                              backgroundColor: null,
+                            ...pesticides.map((entry) {
+                              final pesticide = entry;
+                              bool isSelected = _addedPesticides.contains(
+                                pesticide.id,
+                              );
+
+                              return SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  icon:
+                                      _removePesticide
+                                          ? Icon(Icons.close)
+                                          : null,
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor:
+                                        (isSelected || _removePesticide)
+                                            ? AppColors.lightTextBlue
+                                            : AppColors.darkTextBlue,
+                                    backgroundColor:
+                                        _removePesticide
+                                            ? Theme.of(
+                                              context,
+                                            ).colorScheme.error
+                                            : isSelected
+                                            ? AppColors.primaryBlue
+                                            : AppColors.secondaryBlue,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    if (!_removePesticide) {
+                                      setState(() {
+                                        if (isSelected) {
+                                          _addedPesticides.remove(pesticide.id);
+                                        } else {
+                                          _addedPesticides.add(pesticide.id);
+                                        }
+                                      });
+                                    } else {
+                                      _addedPesticides.clear();
+                                      ref
+                                          .read(
+                                            accessoriesNotifierProvider
+                                                .notifier,
+                                          )
+                                          .deleteAccessory(pesticide.id);
+                                    }
+                                  },
+                                  label: Text(pesticide.name),
+                                ),
+                              );
+                            }),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                if (!_removePesticide)
+                                  TextButton.icon(
+                                    icon: Icon(Icons.add),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: AppColors.darkTextBlue,
+                                      backgroundColor: null,
+                                    ),
+                                    onPressed: () async {
+                                      final newId = await showAccessoryDialog(
+                                        context,
+                                        ref,
+                                        null,
+                                        EventType.pesticide,
+                                      );
+                                      if (newId != null) {
+                                        setState(() {
+                                          _addedPesticides.add(newId);
+                                          _removePesticide = false;
+                                        });
+                                      }
+                                    },
+                                    label: Text('add new'),
+                                  ),
+                                if (pesticides.isNotEmpty)
+                                  TextButton.icon(
+                                    icon:
+                                        (_removePesticide)
+                                            ? Icon(Icons.done)
+                                            : Icon(Icons.remove),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: AppColors.darkTextBlue,
+                                      backgroundColor: null,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _removePesticide = !_removePesticide;
+                                      });
+                                    },
+                                    label: Text(
+                                      (_removePesticide) ? "done" : 'remove',
+                                    ),
+                                  ),
+                              ],
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _removePesticide = !_removePesticide;
-                              });
-                            },
-                            label: Text((_removePesticide) ? "done" : 'remove'),
-                          ),
-                      ],
+                          ],
+                        );
+                      },
+                      loading: () => Center(child: CircularProgressIndicator()),
+                      error: (e, st) {
+                        debugPrintStack();
+                        return Center(child: Text('Error: $e'));
+                      },
                     ),
                   ],
-                );
-              },
-              loading: () => Center(child: CircularProgressIndicator()),
-              error: (e, st) {
-                print(st);
-                return Center(child: Text('Error: $e'));
-              },
-            ),
-            //
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Date",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      _pickDate(context);
-                    });
-                  },
-                  icon: Icon(Icons.calendar_month),
-                  label: Text(
-                    "${_pickedDate.month}/${_pickedDate.day}/${_pickedDate.year}",
-                  ),
-                ),
-              ],
+              ),
             ),
-            const SizedBox(height: 10),
-            Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  TextFormField(
-                    decoration: const InputDecoration(labelText: "Notes"),
-                    controller: _notesController,
-                  ),
-                ],
+            SizedBox(height: 4),
+            FakeBlur(
+              borderRadius: BorderRadius.zero,
+              overlay: AppColors.secondaryBlue.withAlpha(200),
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "date",
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.darkTextBlue,
+                        fontSize: 20,
+                      ),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _pickDate(context);
+                        });
+                      },
+                      icon: Icon(Icons.calendar_month),
+                      label: Text(
+                        "${_pickedDate.month}/${_pickedDate.day}/${_pickedDate.year}",
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: 4),
+            FakeBlur(
+              borderRadius: BorderRadius.zero,
+              overlay: AppColors.secondaryBlue.withAlpha(200),
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "notes",
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleMedium?.copyWith(
+                              color: AppColors.darkTextBlue,
+                              fontSize: 20,
+                            ),
+                          ),
+                          ThemedTextFormField(
+                            controller: _notesController,
+                            hint: "about this event",
+                            fillColor: AppColors.secondaryBlue,
+                            textColor: AppColors.darkTextBlue,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 
-            const SizedBox(height: 30),
-
-            // Submit & Cancel buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.check),
-                  label: const Text("Submit"),
-                  onPressed: () async {
-                    await _submit();
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                    }
-                  },
-                ),
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.close),
-                  label: const Text("Cancel"),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
-            ),
+            SizedBox(height: _bottomNavHeight),
           ],
         ),
       ),

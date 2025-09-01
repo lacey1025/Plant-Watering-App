@@ -9,6 +9,7 @@ import 'package:plant_application/screens/shared/accessory_dialog.dart';
 import 'package:plant_application/screens/shared/background_scaffold.dart';
 import 'package:plant_application/screens/shared/custom_app_bar.dart';
 import 'package:plant_application/screens/shared/fake_blur.dart';
+import 'package:plant_application/screens/shared/text_form_field.dart';
 import 'package:plant_application/theme.dart';
 
 class AddWateringScreen extends ConsumerStatefulWidget {
@@ -160,6 +161,9 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                                       )
                                       .deleteAccessory(accessory.id);
                                 }
+                                if (waterAccessories.isEmpty) {
+                                  _removeWaterTypes = false;
+                                }
                               },
                               label: Text(accessory.name),
                             ),
@@ -168,27 +172,28 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            TextButton.icon(
-                              icon: Icon(Icons.add),
-                              style: TextButton.styleFrom(
-                                foregroundColor: AppColors.darkTextPink,
-                                backgroundColor: null,
+                            if (!_removeWaterTypes)
+                              TextButton.icon(
+                                icon: Icon(Icons.add),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: AppColors.darkTextPink,
+                                  backgroundColor: null,
+                                ),
+                                onPressed: () async {
+                                  final newId = await showAccessoryDialog(
+                                    context,
+                                    ref,
+                                    null,
+                                    EventType.watering,
+                                  );
+                                  if (newId != null) {
+                                    notifier.updateWaterTypeId(newId);
+                                    _validWaterType = true;
+                                    _removeWaterTypes = false;
+                                  }
+                                },
+                                label: Text('add new'),
                               ),
-                              onPressed: () async {
-                                final newId = await showAccessoryDialog(
-                                  context,
-                                  ref,
-                                  null,
-                                  EventType.watering,
-                                );
-                                if (newId != null) {
-                                  notifier.updateWaterTypeId(newId);
-                                  _validWaterType = true;
-                                  _removeWaterTypes = false;
-                                }
-                              },
-                              label: Text('add new'),
-                            ),
                             if (waterAccessories.isNotEmpty)
                               TextButton.icon(
                                 icon:
@@ -296,6 +301,10 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                                 ref
                                     .read(accessoriesNotifierProvider.notifier)
                                     .deleteAccessory(fert.id);
+
+                                if (fertilizerAccessories.length <= 1) {
+                                  _removeFertTypes = false;
+                                }
                               }
                             },
                             label: Row(
@@ -366,22 +375,23 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            TextButton.icon(
-                              icon: Icon(Icons.add),
-                              style: TextButton.styleFrom(
-                                foregroundColor: AppColors.darkTextYellow,
-                                backgroundColor: null,
+                            if (!_removeFertTypes)
+                              TextButton.icon(
+                                icon: Icon(Icons.add),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: AppColors.darkTextYellow,
+                                  backgroundColor: null,
+                                ),
+                                onPressed: () async {
+                                  await showAccessoryDialog(
+                                    context,
+                                    ref,
+                                    null,
+                                    EventType.fertilizer,
+                                  );
+                                },
+                                label: Text('add new'),
                               ),
-                              onPressed: () async {
-                                await showAccessoryDialog(
-                                  context,
-                                  ref,
-                                  null,
-                                  EventType.fertilizer,
-                                );
-                              },
-                              label: Text('add new'),
-                            ),
 
                             if (fertilizerAccessories.isNotEmpty)
                               TextButton.icon(
@@ -537,7 +547,6 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      // crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
                           "date",
@@ -557,19 +566,11 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                         ),
                       ],
                     ),
-
-                    TextFormField(
-                      style: TextStyle(color: AppColors.darkTextBlue),
-                      minLines: 1,
-                      maxLines: null,
-                      keyboardType: TextInputType.multiline,
-
-                      decoration: _inputDecoration(
-                        "notes",
-                        AppColors.secondaryBlue,
-                        AppColors.darkTextBlue,
-                      ),
+                    ThemedTextFormField(
                       controller: _notesController,
+                      label: "notes",
+                      fillColor: AppColors.secondaryBlue,
+                      textColor: AppColors.darkTextBlue,
                     ),
                   ],
                 ),
@@ -624,15 +625,13 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                         const SizedBox(height: 10),
                         Form(
                           key: _formKey,
-                          child: TextFormField(
-                            style: TextStyle(color: AppColors.darkTextPink),
-                            decoration: _inputDecoration(
-                              "pot size",
-                              AppColors.secondaryPink,
-                              AppColors.darkTextPink,
-                            ),
-                            keyboardType: TextInputType.number,
+                          child: ThemedTextFormField(
+                            // context: context,
                             controller: _potSizeController,
+                            label: "pot size",
+                            fillColor: AppColors.secondaryPink,
+                            textColor: AppColors.darkTextPink,
+                            keyboardType: TextInputType.number,
                             validator: (value) {
                               if (form.isRepot) {
                                 if (value == null || value.isEmpty) {
@@ -649,24 +648,19 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                             },
                           ),
                         ),
-                        TextFormField(
-                          style: TextStyle(color: AppColors.darkTextPink),
-                          decoration: _inputDecoration(
-                            "soil type",
-                            AppColors.secondaryPink,
-                            AppColors.darkTextPink,
-                          ),
+                        ThemedTextFormField(
                           controller: _soilTypeController,
+                          label: "soil type",
+                          fillColor: AppColors.secondaryPink,
+                          textColor: AppColors.darkTextPink,
                         ),
-                        TextFormField(
-                          style: TextStyle(color: AppColors.darkTextPink),
-                          decoration: _inputDecoration(
-                            "notes",
-                            AppColors.secondaryPink,
-                            AppColors.darkTextPink,
-                          ),
+                        ThemedTextFormField(
                           controller: _repotNotesController,
+                          label: "notes",
+                          fillColor: AppColors.secondaryPink,
+                          textColor: AppColors.darkTextPink,
                         ),
+
                         SizedBox(height: 4),
                       ],
                     ],
@@ -682,9 +676,7 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
               children: [
                 SizedBox(width: 8),
                 Expanded(
-                  child: FilledButton.icon(
-                    icon: const Icon(Icons.close),
-                    label: const Text("cancel"),
+                  child: FilledButton(
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.secondaryBlue,
                       foregroundColor: AppColors.primaryBlue,
@@ -692,13 +684,13 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
+                    child: const Text("cancel"),
                   ),
                 ),
                 SizedBox(width: 8),
                 Expanded(
-                  child: FilledButton.icon(
-                    icon: const Icon(Icons.check),
-                    label: const Text("submit"),
+                  child: FilledButton(
+                    child: const Text("submit"),
                     onPressed: () async {
                       if (form.isRepot) {
                         final validate = _formKey.currentState?.validate();
@@ -751,24 +743,5 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
     if (strength == 0.5) return "1/2";
     if (strength == 0.25) return "1/4";
     return strength.toStringAsFixed(2);
-  }
-
-  InputDecoration _inputDecoration(
-    String label,
-    Color fillColor,
-    Color textColor,
-  ) {
-    return InputDecoration(
-      filled: true,
-      fillColor: fillColor,
-      enabledBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: textColor, width: 1),
-      ),
-      focusedBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: textColor, width: 2),
-      ),
-      labelText: label,
-      labelStyle: TextStyle(color: textColor),
-    );
   }
 }

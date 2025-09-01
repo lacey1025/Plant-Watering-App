@@ -205,9 +205,9 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
                                   (daysBetween != null)
                                       ? Text(
                                         date.daysBeforeString(daysBetween),
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodyMedium?.copyWith(
+                                        style: GoogleFonts.inter(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
                                           color:
                                               isExpanded
                                                   ? AppColors.lightTextGreen
@@ -356,7 +356,7 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
                                                             icon:
                                                                 Icons
                                                                     .edit_outlined,
-                                                            label: "Edit",
+                                                            label: "edit",
                                                             onPressed: () {
                                                               switch (widget
                                                                   .eventType) {
@@ -389,7 +389,7 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
                                                             icon:
                                                                 Icons
                                                                     .delete_outline,
-                                                            label: "Delete",
+                                                            label: "delete",
                                                             onPressed: () async {
                                                               final confirmed =
                                                                   await showDialog<
@@ -486,7 +486,13 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
             ),
           ),
           icon: const Icon(Icons.add),
-          label: Text("add event"),
+          label: Text(
+            "add ${widget.eventType == EventType.watering
+                ? 'watering'
+                : widget.eventType == EventType.repot
+                ? 'repot'
+                : 'pesticide'} event",
+          ),
           onPressed: () {
             setState(() {
               expandedEventId = null;

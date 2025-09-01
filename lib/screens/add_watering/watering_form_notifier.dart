@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_application/database/plant_app_db.dart';
 import 'package:plant_application/models/fertilizer_data.dart';
@@ -117,7 +118,7 @@ class WateringFormNotifier extends StateNotifier<WateringFormData> {
       });
       await _updateFrequency(wateringEventId);
     } catch (error) {
-      print(error);
+      debugPrint(error.toString());
     }
   }
 
@@ -152,7 +153,7 @@ class WateringFormNotifier extends StateNotifier<WateringFormData> {
         await db.accessoriesDao.insertEventAccessories(eventAccessories);
       });
     } catch (error) {
-      print(error);
+      debugPrint(error.toString());
     }
     final plantAsync = ref.watch(plantNotifierProvider(plantId));
     if (!plantAsync.hasValue || plantAsync.value == null) {
@@ -171,7 +172,7 @@ class WateringFormNotifier extends StateNotifier<WateringFormData> {
   Future<void> _updateFrequency(int eventId) async {
     final plantAsync = ref.watch(plantNotifierProvider(plantId));
     if (!plantAsync.hasValue || plantAsync.value == null) {
-      return; // or handle loading/error states as needed
+      return;
     }
 
     final plant = plantAsync.value;
@@ -218,48 +219,6 @@ class WateringFormNotifier extends StateNotifier<WateringFormData> {
       ),
     );
   }
-
-  // Future<void> deleteEvent(int eventId, PlantCardData plant) async {
-  //   final db = ref.read(databaseProvider);
-  //   db.eventsDao.deleteWaterEvents([eventId]);
-  //   db.eventsDao.deleteEvent(eventId);
-
-  //   final events = await ref.read(
-  //     wateringEventsForPlantProvider(plant.plant.id).future,
-  //   );
-  //   if (!plant.plant.inWateringSchedule ||
-  //       plant.plant.minWateringDays == null ||
-  //       plant.plant.maxWateringDays == null) {
-  //     return;
-  //   }
-  //   late AdaptiveWateringSchedule schedule;
-  //   if (plant.schedule == null) {
-  //     schedule = AdaptiveWateringSchedule(
-  //       minSuccessfulDays: plant.plant.minWateringDays!.toDouble(),
-  //       maxSuccessfulDays: plant.plant.maxWateringDays!.toDouble(),
-  //       totalFeedback: 0,
-  //       positiveFeedback: 0,
-  //     );
-  //   } else {
-  //     schedule = plant.schedule!;
-  //   }
-
-  //   schedule.recalculateSchedule(
-  //     events,
-  //     plant.plant.minWateringDays!.toDouble(),
-  //     plant.plant.maxWateringDays!.toDouble(),
-  //   );
-
-  //   await db.plantsDao.updatePlantFromCompanion(
-  //     plantId,
-  //     PlantsCompanion(
-  //       minWateringDays: Value(schedule.minSuccessfulDays),
-  //       maxWateringDays: Value(schedule.maxSuccessfulDays),
-  //       totalFeedback: Value(schedule.totalFeedback),
-  //       positiveFeedback: Value(schedule.positiveFeedback),
-  //     ),
-  //   );
-  // }
 }
 
 final wateringFormProvider = StateNotifierProvider.family

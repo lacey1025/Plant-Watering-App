@@ -70,6 +70,9 @@ extension DateTimeHelpers on DateTime {
     if (months > 0) parts.add("$months ${months == 1 ? 'month' : 'months'}");
     if (days > 0) parts.add("$days ${days == 1 ? 'day' : 'days'}");
 
+    if (parts.length > 2) {
+      return "${years}y ${months}m ${days}d";
+    }
     if (parts.isEmpty) return "0 days";
     return parts.join(", ");
   }
