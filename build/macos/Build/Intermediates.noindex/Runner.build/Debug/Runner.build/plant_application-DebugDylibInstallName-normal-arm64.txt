@@ -1,0 +1,1 @@
+@rpath/plant_application.debug.dylib

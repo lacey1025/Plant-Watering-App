@@ -47,7 +47,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       appBar: CustomAppBar(title: "my plants"),
       body: Column(
         children: [
-          const SizedBox(height: 16), // space above tab bar
+          const SizedBox(height: 16),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 8),
             child: CustomTabBar(
@@ -86,6 +86,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           ),
                         ),
                     data: (plantCards) {
+                      if (plantCards.isEmpty) {
+                        return Center(
+                          child: Text(
+                            "no plants added yet",
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleMedium?.copyWith(
+                              color: AppColors.darkTextGreen,
+                              fontSize: 18,
+                            ),
+                          ),
+                        );
+                      }
                       plantCards.sort((a, b) {
                         final aDate = a.earliestNextWater;
                         final bDate = b.earliestNextWater;

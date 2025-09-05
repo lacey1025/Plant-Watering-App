@@ -38,7 +38,7 @@ class ItemListTab extends ConsumerWidget {
           emptyMessage,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             color: AppColors.darkTextGreen,
-            fontWeight: FontWeight.w800,
+            fontSize: 18,
           ),
         ),
       );

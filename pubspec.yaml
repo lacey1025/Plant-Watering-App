@@ -54,6 +54,20 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   drift_dev: ^2.26.0
   build_runner: ^2.4.15
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.6
+  rename: ^3.0.2
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "lib/assets/img/plant_app_icon.png"
+
+flutter_native_splash:
+  color: "#FFFFFF"          # background color of splash screen (light green)
+  image: lib/assets/img/background.jpg
+  android: true
+  ios: true
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -70,6 +84,7 @@ flutter:
   assets:
     - lib/assets/img/background.jpg
     - lib/assets/img/background_blur.jpg
+    - lib/assets/img/plant_app_icon.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -1,0 +1,4 @@
+o maybe a photo gallery where you can add photos of all plants - not just by id
+o Make settings for photo banner dismissal
+
+BUGS:
