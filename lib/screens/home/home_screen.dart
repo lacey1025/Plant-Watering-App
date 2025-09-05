@@ -10,6 +10,7 @@ import 'package:plant_application/screens/home/plant_card.dart';
 import 'package:plant_application/screens/shared/background_scaffold.dart';
 import 'package:plant_application/screens/shared/custom_app_bar.dart';
 import 'package:plant_application/screens/shared/custom_tab_bar.dart';
+import 'package:plant_application/theme.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -68,10 +69,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   // Plants tab
                   plantCardsAsync.when(
                     loading:
-                        () => const Center(child: CircularProgressIndicator()),
+                        () => Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.primaryBlue,
+                          ),
+                        ),
                     error:
-                        (e, st) =>
-                            Center(child: Text("Error loading plants: $e")),
+                        (e, st) => Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text(
+                            "error loading plants: $e",
+                            style: TextStyle(
+                              color: AppColors.darkTextBlue,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
                     data: (plantCards) {
                       plantCards.sort((a, b) {
                         final aDate = a.earliestNextWater;
@@ -81,7 +94,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         if (bDate == null) return -1;
                         return aDate.compareTo(bDate);
                       });
-
                       return ListView.builder(
                         itemCount: plantCards.length,
                         itemBuilder: (context, index) {
@@ -95,10 +107,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   // Fertilizers tab
                   accessoriesAsync.when(
                     loading:
-                        () => const Center(child: CircularProgressIndicator()),
+                        () => Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.primaryBlue,
+                          ),
+                        ),
                     error:
-                        (e, st) => Center(
-                          child: Text("Error loading fertilizers: $e"),
+                        (e, st) => Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text(
+                            "error loading fertilizers: $e",
+                            style: TextStyle(
+                              color: AppColors.darkTextBlue,
+                              fontSize: 16,
+                            ),
+                          ),
                         ),
                     data: (data) {
                       final fertilizers =
@@ -119,10 +142,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   // Pesticides tab
                   accessoriesAsync.when(
                     loading:
-                        () => const Center(child: CircularProgressIndicator()),
+                        () => Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.primaryBlue,
+                          ),
+                        ),
                     error:
-                        (e, st) =>
-                            Center(child: Text("Error loading pesticides: $e")),
+                        (e, st) => Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text(
+                            "error loading pesticides: $e",
+                            style: TextStyle(
+                              color: AppColors.darkTextBlue,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
                     data: (data) {
                       final pesticides =
                           data
@@ -170,7 +205,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               },
             ),
           ),
-          const SizedBox(height: 24), // space at the bottom
+          const SizedBox(height: 16), // space at the bottom
         ],
       ),
     );

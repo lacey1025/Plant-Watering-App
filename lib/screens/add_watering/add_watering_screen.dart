@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:plant_application/database/plant_app_db.dart';
 import 'package:plant_application/models/enums/event_types_enum.dart';
 import 'package:plant_application/models/enums/timing_enum.dart';
 import 'package:plant_application/notifier_providers/accessories_provider.dart';
@@ -8,8 +9,12 @@ import 'package:plant_application/screens/add_watering/watering_form_notifier.da
 import 'package:plant_application/screens/shared/accessory_dialog.dart';
 import 'package:plant_application/screens/shared/background_scaffold.dart';
 import 'package:plant_application/screens/shared/custom_app_bar.dart';
+import 'package:plant_application/screens/shared/date_card.dart';
 import 'package:plant_application/screens/shared/fake_blur.dart';
+import 'package:plant_application/screens/shared/selection_section.dart';
+import 'package:plant_application/screens/shared/sticky_bottom_buttons.dart';
 import 'package:plant_application/screens/shared/text_form_field.dart';
+import 'package:plant_application/screens/shared/text_widgets.dart';
 import 'package:plant_application/theme.dart';
 
 class AddWateringScreen extends ConsumerStatefulWidget {
@@ -33,6 +38,7 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
   bool _removeWaterTypes = false;
   bool _removeFertTypes = false;
   bool _validWaterType = true;
+  bool _isLoading = true;
 
   @override
   void dispose() {
@@ -52,8 +58,11 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
           wateringFormProvider(widget.plantId).notifier,
         );
         notifier.loadForEdit(widget.editData!);
+        _isLoading = false;
       });
       _notesController.text = widget.editData?.notes ?? '';
+    } else {
+      _isLoading = false;
     }
   }
 
@@ -80,106 +89,78 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
     final notifier = ref.read(provider.notifier);
     final accessoriesAsync = ref.watch(accessoriesNotifierProvider);
 
+    final waterRepotColors = SelectionColorScheme.pink;
+    final fertColors = SelectionColorScheme.yellow;
+    final timingColors = SelectionColorScheme.green;
+    final dateColors = SelectionColorScheme.blue;
+
     return BackgroundScaffold(
       appBar: CustomAppBar(title: "watering event"),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Water type section
-            accessoriesAsync.when(
-              data: (accessories) {
-                final waterAccessories =
-                    accessories
-                        .where((a) => a.type == EventType.watering.toString())
-                        .toList();
-
-                return FakeBlur(
-                  overlay: AppColors.secondaryPink.withAlpha(200),
-                  borderRadius: BorderRadius.zero,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(8, 8, 8, 0),
-                    child: Column(
-                      children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            "water type",
-                            style: Theme.of(
-                              context,
-                            ).textTheme.titleMedium?.copyWith(
-                              color: AppColors.darkTextPink,
-                              fontSize: 20,
-                            ),
+      body:
+          _isLoading
+              ? SizedBox.shrink()
+              : CustomScrollView(
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        FakeBlur(
+                          overlay: waterRepotColors.secondaryColor.withAlpha(
+                            200,
                           ),
-                        ),
-                        ...waterAccessories.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final accessory = entry.value;
-                          bool isSelected;
-                          if (form.waterTypeId == null && index == 0) {
-                            isSelected = true;
-                            selectedWaterId = accessory.id;
-                          } else {
-                            isSelected = form.waterTypeId == accessory.id;
-                          }
-
-                          return SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              icon:
-                                  _removeWaterTypes ? Icon(Icons.close) : null,
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor:
-                                    (isSelected || _removeWaterTypes)
-                                        ? AppColors.lightTextPink
-                                        : AppColors.darkTextPink,
-                                backgroundColor:
-                                    _removeWaterTypes
-                                        ? Theme.of(context).colorScheme.error
-                                        : isSelected
-                                        ? AppColors.primaryPink
-                                        : AppColors.secondaryPink,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              onPressed: () {
-                                if (!_removeWaterTypes) {
-                                  selectedWaterId = accessory.id;
-                                  notifier.updateWaterTypeId(accessory.id);
-                                  if (!_validWaterType) {
-                                    _validWaterType = true;
-                                  }
-                                } else {
-                                  selectedWaterId = null;
-                                  notifier.removeWaterType(accessory.id);
-                                  ref
-                                      .read(
-                                        accessoriesNotifierProvider.notifier,
+                          borderRadius: BorderRadius.zero,
+                          padding: EdgeInsets.fromLTRB(8, 8, 8, 0),
+                          child: accessoriesAsync.when(
+                            data: (accessories) {
+                              final waterAccessories =
+                                  accessories
+                                      .where(
+                                        (a) =>
+                                            a.type ==
+                                            EventType.watering.toString(),
                                       )
-                                      .deleteAccessory(accessory.id);
-                                }
-                                if (waterAccessories.isEmpty) {
-                                  _removeWaterTypes = false;
-                                }
-                              },
-                              label: Text(accessory.name),
-                            ),
-                          );
-                        }),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            if (!_removeWaterTypes)
-                              TextButton.icon(
-                                icon: Icon(Icons.add),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: AppColors.darkTextPink,
-                                  backgroundColor: null,
-                                ),
-                                onPressed: () async {
+                                      .toList();
+
+                              return SelectionSection<Accessory>(
+                                title: "water type",
+                                items: waterAccessories,
+                                isSelected: (accessory) {
+                                  if (form.waterTypeId == null) {
+                                    final firstItem =
+                                        waterAccessories.isNotEmpty
+                                            ? waterAccessories.first
+                                            : null;
+                                    if (accessory.id == firstItem?.id) {
+                                      selectedWaterId = accessory.id;
+                                      return true;
+                                    }
+                                  }
+                                  return form.waterTypeId == accessory.id;
+                                },
+                                onItemPressed: (accessory) {
+                                  if (!_removeWaterTypes) {
+                                    selectedWaterId = accessory.id;
+                                    notifier.updateWaterTypeId(accessory.id);
+                                    if (!_validWaterType) {
+                                      _validWaterType = true;
+                                    }
+                                  } else {
+                                    selectedWaterId = null;
+                                    notifier.removeWaterType(accessory.id);
+                                    ref
+                                        .read(
+                                          accessoriesNotifierProvider.notifier,
+                                        )
+                                        .deleteAccessory(accessory.id);
+                                  }
+                                  if (waterAccessories.isEmpty) {
+                                    _removeWaterTypes = false;
+                                  }
+                                },
+                                getItemName: (accessory) => accessory.name,
+                                colorScheme: waterRepotColors,
+                                onAddNew: () async {
                                   final newId = await showAccessoryDialog(
                                     context,
                                     ref,
@@ -192,197 +173,105 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                                     _removeWaterTypes = false;
                                   }
                                 },
-                                label: Text('add new'),
-                              ),
-                            if (waterAccessories.isNotEmpty)
-                              TextButton.icon(
-                                icon:
-                                    (_removeWaterTypes)
-                                        ? Icon(Icons.done)
-                                        : Icon(Icons.remove),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: AppColors.darkTextPink,
-                                  backgroundColor: null,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _removeWaterTypes = !_removeWaterTypes;
-                                  });
-                                },
-                                label: Text(
-                                  (_removeWaterTypes) ? "done" : 'remove',
-                                ),
-                              ),
-                          ],
-                        ),
-                        if (!_validWaterType)
-                          Text(
-                            "please add a water type",
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-              loading: () => Center(child: CircularProgressIndicator()),
-              error: (e, st) {
-                debugPrint(st.toString());
-                return Center(child: Text('Error: $e'));
-              },
-            ),
-
-            const SizedBox(height: 8),
-
-            // Fertilizer section
-            accessoriesAsync.when(
-              data: (accessories) {
-                final fertilizerAccessories =
-                    accessories
-                        .where((a) => a.type == EventType.fertilizer.toString())
-                        .toList();
-
-                return FakeBlur(
-                  overlay: AppColors.secondaryYellow.withAlpha(200),
-                  borderRadius: BorderRadius.zero,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(8, 8, 8, 0),
-                    child: Column(
-                      spacing: 4,
-                      children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            "fertilizers",
-                            style: Theme.of(
-                              context,
-                            ).textTheme.titleMedium?.copyWith(
-                              color: AppColors.darkTextYellow,
-                              fontSize: 20,
-                            ),
-                          ),
-                        ),
-                        ...fertilizerAccessories.map((fert) {
-                          final isSelected = form.fertilizers.any(
-                            (f) => f.accessoryId == fert.id,
-                          );
-                          return ElevatedButton.icon(
-                            icon: _removeFertTypes ? Icon(Icons.close) : null,
-                            style: ElevatedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: isSelected ? 0 : 14,
-                              ),
-                              foregroundColor:
-                                  (isSelected || _removeFertTypes)
-                                      ? AppColors.lightTextYellow
-                                      : AppColors.darkTextYellow,
-                              backgroundColor:
-                                  _removeFertTypes
-                                      ? Theme.of(context).colorScheme.error
-                                      : isSelected
-                                      ? AppColors.primaryYellow
-                                      : AppColors.secondaryYellow,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onPressed: () {
-                              if (!_removeFertTypes) {
-                                if (isSelected) {
-                                  notifier.removeFertilizer(fert.id);
-                                } else {
-                                  notifier.addFertilizer(fert.id, 1);
-                                }
-                              } else {
-                                notifier.removeFertilizer(fert.id);
-                                ref
-                                    .read(accessoriesNotifierProvider.notifier)
-                                    .deleteAccessory(fert.id);
-
-                                if (fertilizerAccessories.length <= 1) {
-                                  _removeFertTypes = false;
-                                }
-                              }
+                                onRemoveToggle:
+                                    () => setState(
+                                      () =>
+                                          _removeWaterTypes =
+                                              !_removeWaterTypes,
+                                    ),
+                                isRemoveMode: _removeWaterTypes,
+                                canRemove: true,
+                                errorMessage:
+                                    !_validWaterType
+                                        ? "please add a water type"
+                                        : null,
+                              );
                             },
-                            label: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(fert.name),
-                                if (isSelected && !_removeFertTypes)
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        padding: EdgeInsets.zero,
-                                        icon: Icon(Icons.remove, size: 18),
-                                        onPressed: () {
-                                          final oldStrength =
-                                              form.fertilizers
-                                                  .firstWhere(
-                                                    (f) =>
-                                                        f.accessoryId ==
-                                                        fert.id,
-                                                  )
-                                                  .strength;
-                                          final strength = (oldStrength -
-                                                  interval)
-                                              .clamp(0.25, 2.0);
-                                          notifier.updateFertilizerStrength(
-                                            fert.id,
-                                            strength,
-                                          );
-                                        },
-                                      ),
-                                      Text(
-                                        _strengthLabel(
-                                          form.fertilizers
-                                              .firstWhere(
-                                                (f) => f.accessoryId == fert.id,
-                                              )
-                                              .strength,
-                                        ),
-                                      ),
-                                      IconButton(
-                                        padding: EdgeInsets.zero,
-                                        icon: Icon(Icons.add, size: 18),
-                                        onPressed: () {
-                                          final oldStrength =
-                                              form.fertilizers
-                                                  .firstWhere(
-                                                    (f) =>
-                                                        f.accessoryId ==
-                                                        fert.id,
-                                                  )
-                                                  .strength;
-                                          final strength = (oldStrength +
-                                                  interval)
-                                              .clamp(0.0, 2.0);
-                                          notifier.updateFertilizerStrength(
-                                            fert.id,
-                                            strength,
-                                          );
-                                        },
-                                      ),
-                                    ],
+                            loading:
+                                () => Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                      top: 8,
+                                      bottom: 16,
+                                    ),
+                                    child: CircularProgressIndicator(
+                                      color: waterRepotColors.primaryColor,
+                                    ),
                                   ),
-                              ],
-                            ),
-                          );
-                        }),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            if (!_removeFertTypes)
-                              TextButton.icon(
-                                icon: Icon(Icons.add),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: AppColors.darkTextYellow,
-                                  backgroundColor: null,
                                 ),
-                                onPressed: () async {
+                            error: (e, st) {
+                              debugPrint(st.toString());
+                              return Padding(
+                                padding: EdgeInsets.only(bottom: 8),
+                                child: Text('Error loading water types: $e'),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+
+                        // Fertilizer section
+                        FakeBlur(
+                          overlay: fertColors.secondaryColor.withAlpha(200),
+                          borderRadius: BorderRadius.zero,
+                          padding: EdgeInsets.fromLTRB(8, 8, 8, 0),
+                          child: accessoriesAsync.when(
+                            data: (accessories) {
+                              final fertilizerAccessories =
+                                  accessories
+                                      .where(
+                                        (a) =>
+                                            a.type ==
+                                            EventType.fertilizer.toString(),
+                                      )
+                                      .toList();
+                              return SelectionSection<Accessory>(
+                                title: "fertilizers",
+                                items: fertilizerAccessories,
+                                isSelected:
+                                    (fert) => form.fertilizers.any(
+                                      (f) => f.accessoryId == fert.id,
+                                    ),
+                                onItemPressed: (fert) {
+                                  if (!_removeFertTypes) {
+                                    if (form.fertilizers.any(
+                                      (f) => f.accessoryId == fert.id,
+                                    )) {
+                                      notifier.removeFertilizer(fert.id);
+                                    } else {
+                                      notifier.addFertilizer(fert.id, 1);
+                                    }
+                                  } else {
+                                    notifier.removeFertilizer(fert.id);
+                                    ref
+                                        .read(
+                                          accessoriesNotifierProvider.notifier,
+                                        )
+                                        .deleteAccessory(fert.id);
+
+                                    if (fertilizerAccessories.length <= 1) {
+                                      _removeFertTypes = false;
+                                    }
+                                  }
+                                },
+                                getItemName: (fert) => fert.name,
+                                colorScheme: fertColors,
+                                customItemBuilder: (
+                                  fert,
+                                  isSelected,
+                                  isRemoveMode,
+                                ) {
+                                  return _buildFertilizerButton(
+                                    fert,
+                                    isSelected,
+                                    interval,
+                                    form,
+                                    notifier,
+                                    ref,
+                                    fertilizerAccessories,
+                                  );
+                                },
+                                onAddNew: () async {
                                   await showAccessoryDialog(
                                     context,
                                     ref,
@@ -390,311 +279,278 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                                     EventType.fertilizer,
                                   );
                                 },
-                                label: Text('add new'),
-                              ),
-
-                            if (fertilizerAccessories.isNotEmpty)
-                              TextButton.icon(
-                                icon:
-                                    (_removeFertTypes)
-                                        ? Icon(Icons.done)
-                                        : Icon(Icons.remove),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: AppColors.darkTextYellow,
-                                  backgroundColor: null,
+                                onRemoveToggle:
+                                    () => setState(() {
+                                      _removeFertTypes = !_removeFertTypes;
+                                    }),
+                                isRemoveMode: _removeFertTypes,
+                                canRemove: true,
+                                spacing: 2,
+                              );
+                            },
+                            loading:
+                                () => Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                      top: 8,
+                                      bottom: 16,
+                                    ),
+                                    child: CircularProgressIndicator(
+                                      color: fertColors.primaryColor,
+                                    ),
+                                  ),
                                 ),
-                                onPressed: () {
-                                  setState(() {
-                                    _removeFertTypes = !_removeFertTypes;
-                                  });
-                                },
-                                label: Text(
-                                  (_removeFertTypes) ? "done" : 'remove',
-                                ),
-                              ),
-                          ],
+                            error: (e, st) {
+                              debugPrintStack();
+                              return Padding(
+                                padding: EdgeInsets.only(bottom: 8),
+                                child: Text('Error loading pesticides: $e'),
+                              );
+                            },
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-              loading: () => Center(child: CircularProgressIndicator()),
-              error: (e, st) {
-                debugPrint(st.toString());
-                return Center(child: Text('Error: $e'));
-              },
-            ),
-            const SizedBox(height: 8),
+                        const SizedBox(height: 8),
 
-            FakeBlur(
-              overlay: AppColors.secondaryGreen.withAlpha(200),
-              borderRadius: BorderRadius.zero,
-              child: Padding(
-                padding: EdgeInsets.all(8),
-                child: Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "timing",
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleMedium?.copyWith(
-                          color: AppColors.darkTextGreen,
-                          fontSize: 20,
-                        ),
-                      ),
-                    ),
-                    ...Timing.values.map((t) {
-                      final isSelected = form.timing == t;
-                      return SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor:
-                                isSelected
-                                    ? AppColors.lightTextGreen
-                                    : AppColors.darkTextGreen,
-                            backgroundColor:
-                                isSelected
-                                    ? AppColors.primaryGreen
-                                    : AppColors.secondaryGreen,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                        // timing section
+                        FakeBlur(
+                          overlay: timingColors.secondaryColor.withAlpha(200),
+                          borderRadius: BorderRadius.zero,
+                          padding: EdgeInsets.all(8),
+                          child: Column(
+                            children: [
+                              SelectionSection<Timing>(
+                                title: "timing",
+                                items: Timing.values,
+                                isSelected: (timing) => form.timing == timing,
+                                onItemPressed:
+                                    (timing) => notifier.updateTiming(timing),
+                                getItemName:
+                                    (timing) => timing.toString().toLowerCase(),
+                                colorScheme: timingColors,
+                              ),
+                              if (form.timing == Timing.early ||
+                                  form.timing == Timing.late) ...[
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: [
+                                    Text(
+                                      "how many days off?",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: timingColors.textColor,
+                                      ),
+                                    ),
+                                    Container(
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(50),
+                                        color: timingColors.primaryColor,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.remove,
+                                              size: 18,
+                                              color:
+                                                  timingColors
+                                                      .selectedTextColor,
+                                            ),
+                                            onPressed: () {
+                                              notifier.updateDaysToCorrect(
+                                                (form.daysToCorrect - 1).clamp(
+                                                  1,
+                                                  14,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                          Text(
+                                            form.daysToCorrect.toString(),
+                                            style: TextStyle(
+                                              color:
+                                                  timingColors
+                                                      .selectedTextColor,
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.add,
+                                              size: 18,
+                                              color:
+                                                  timingColors
+                                                      .selectedTextColor,
+                                            ),
+                                            onPressed: () {
+                                              notifier.updateDaysToCorrect(
+                                                (form.daysToCorrect + 1).clamp(
+                                                  0,
+                                                  14,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
                           ),
-                          onPressed: () {
-                            notifier.updateTiming(t);
-                          },
-                          child: Text(t.toString().toLowerCase()),
                         ),
-                      );
-                    }),
-                    if (form.timing == Timing.early ||
-                        form.timing == Timing.late) ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Text(
-                            "how many days off?",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.darkTextGreen,
-                            ),
+
+                        const SizedBox(height: 8),
+
+                        FakeBlur(
+                          overlay: dateColors.secondaryColor.withAlpha(200),
+                          borderRadius: BorderRadius.zero,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 12,
                           ),
-                          Container(
-                            height: 40,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(50),
-                              color: AppColors.primaryGreen,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SectionTitleText(
+                                "about",
+                                color: dateColors.textColor,
+                              ),
+                              DateCard(
+                                colors: dateColors,
+                                titleText: "date",
+                                onTap: () => _pickDate(context),
+                                dateText:
+                                    "${form.date.month}/${form.date.day}/${form.date.year}",
+                              ),
+                              // Row(
+                              //   mainAxisAlignment:
+                              //       MainAxisAlignment.spaceBetween,
+                              //   children: [
+                              //     SectionTitleText(
+                              //       "date",
+                              //       color: dateColors.textColor,
+                              //     ),
+                              //     SizedBox(width: 30),
+                              //     ElevatedButton.icon(
+                              //       onPressed: () => _pickDate(context),
+                              //       icon: Icon(Icons.calendar_month),
+                              //       label: Text(
+                              //         "${form.date.month}/${form.date.day}/${form.date.year}",
+                              //       ),
+                              //     ),
+                              //   ],
+                              // ),
+                              ThemedTextFormField(
+                                controller: _notesController,
+                                label: "notes",
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        if (!form.isEdit)
+                          FakeBlur(
+                            overlay: waterRepotColors.secondaryColor.withAlpha(
+                              200,
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
+                            borderRadius: BorderRadius.zero,
+                            padding: EdgeInsets.all(8),
+                            child: Column(
+                              spacing: 4,
                               children: [
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.remove,
-                                    size: 18,
-                                    color: AppColors.lightTextGreen,
-                                  ),
-                                  onPressed: () {
-                                    notifier.updateDaysToCorrect(
-                                      (form.daysToCorrect - 1).clamp(1, 14),
-                                    );
-                                  },
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    SectionTitleText(
+                                      "did you repot?",
+                                      color: waterRepotColors.textColor,
+                                    ),
+
+                                    Switch(
+                                      activeColor:
+                                          waterRepotColors.primaryColor,
+                                      inactiveTrackColor:
+                                          waterRepotColors.secondaryColor,
+                                      inactiveThumbColor: Color.fromRGBO(
+                                        168,
+                                        122,
+                                        149,
+                                        1,
+                                      ),
+                                      trackOutlineColor:
+                                          WidgetStateProperty.all(
+                                            Color.fromRGBO(168, 122, 149, 1),
+                                          ),
+                                      value: form.isRepot,
+                                      onChanged: (val) {
+                                        notifier.updateIsRepot(val);
+                                        _repotNotesController.clear();
+                                        _potSizeController.clear();
+                                        _soilTypeController.clear();
+                                      },
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  form.daysToCorrect.toString(),
-                                  style: TextStyle(
-                                    color: AppColors.lightTextGreen,
+                                if (form.isRepot) ...[
+                                  const SizedBox(height: 10),
+                                  Form(
+                                    key: _formKey,
+                                    child: ThemedTextFormField(
+                                      controller: _potSizeController,
+                                      label: "pot size",
+                                      colorScheme: SelectionColorScheme.pink,
+                                      keyboardType: TextInputType.number,
+                                      validator: (value) {
+                                        if (form.isRepot) {
+                                          if (value == null || value.isEmpty) {
+                                            return 'Please enter a pot size';
+                                          }
+                                          final potSize = double.tryParse(
+                                            _potSizeController.text,
+                                          );
+                                          if (potSize == null) {
+                                            return 'Please ensure pot size is a number';
+                                          }
+                                        }
+                                        return null;
+                                      },
+                                    ),
                                   ),
-                                ),
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.add,
-                                    size: 18,
-                                    color: AppColors.lightTextGreen,
+                                  ThemedTextFormField(
+                                    controller: _soilTypeController,
+                                    label: "soil type",
+                                    colorScheme: SelectionColorScheme.pink,
                                   ),
-                                  onPressed: () {
-                                    notifier.updateDaysToCorrect(
-                                      (form.daysToCorrect + 1).clamp(0, 14),
-                                    );
-                                  },
-                                ),
+                                  ThemedTextFormField(
+                                    controller: _repotNotesController,
+                                    label: "notes",
+                                    colorScheme: SelectionColorScheme.pink,
+                                  ),
+
+                                  SizedBox(height: 4),
+                                ],
                               ],
                             ),
                           ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            FakeBlur(
-              overlay: AppColors.secondaryBlue.withAlpha(200),
-              borderRadius: BorderRadius.zero,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                child: Column(
-                  spacing: 8,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "date",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.darkTextBlue,
-                          ),
-                        ),
-                        SizedBox(width: 30),
-                        ElevatedButton.icon(
-                          onPressed: () => _pickDate(context),
-                          icon: Icon(Icons.calendar_month),
-                          label: Text(
-                            "${form.date.month}/${form.date.day}/${form.date.year}",
-                          ),
-                        ),
-                      ],
+                      ]),
                     ),
-                    ThemedTextFormField(
-                      controller: _notesController,
-                      label: "notes",
-                      fillColor: AppColors.secondaryBlue,
-                      textColor: AppColors.darkTextBlue,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            if (!form.isEdit)
-              FakeBlur(
-                overlay: AppColors.secondaryPink.withAlpha(200),
-                borderRadius: BorderRadius.zero,
-                child: Padding(
-                  padding: EdgeInsets.all(8),
-                  child: Column(
-                    spacing: 4,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "did you repot?",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.darkTextPink,
-                            ),
-                          ),
-                          Switch(
-                            activeColor: AppColors.primaryPink,
-                            inactiveTrackColor: AppColors.secondaryPink,
-                            inactiveThumbColor: Color.fromRGBO(
-                              168,
-                              122,
-                              149,
-                              1,
-                            ),
-                            trackOutlineColor: WidgetStateProperty.all(
-                              Color.fromRGBO(168, 122, 149, 1),
-                            ),
-                            value: form.isRepot,
-                            onChanged: (val) {
-                              notifier.updateIsRepot(val);
-                              _repotNotesController.clear();
-                              _potSizeController.clear();
-                              _soilTypeController.clear();
-                            },
-                          ),
-                        ],
-                      ),
-                      if (form.isRepot) ...[
-                        const SizedBox(height: 10),
-                        Form(
-                          key: _formKey,
-                          child: ThemedTextFormField(
-                            // context: context,
-                            controller: _potSizeController,
-                            label: "pot size",
-                            fillColor: AppColors.secondaryPink,
-                            textColor: AppColors.darkTextPink,
-                            keyboardType: TextInputType.number,
-                            validator: (value) {
-                              if (form.isRepot) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter a pot size';
-                                }
-                                final potSize = double.tryParse(
-                                  _potSizeController.text,
-                                );
-                                if (potSize == null) {
-                                  return 'Please ensure pot size is a number';
-                                }
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        ThemedTextFormField(
-                          controller: _soilTypeController,
-                          label: "soil type",
-                          fillColor: AppColors.secondaryPink,
-                          textColor: AppColors.darkTextPink,
-                        ),
-                        ThemedTextFormField(
-                          controller: _repotNotesController,
-                          label: "notes",
-                          fillColor: AppColors.secondaryPink,
-                          textColor: AppColors.darkTextPink,
-                        ),
-
-                        SizedBox(height: 4),
-                      ],
-                    ],
                   ),
-                ),
-              ),
-
-            const SizedBox(height: 30),
-
-            // Submit & Cancel buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                SizedBox(width: 8),
-                Expanded(
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.secondaryBlue,
-                      foregroundColor: AppColors.primaryBlue,
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text("cancel"),
-                  ),
-                ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: FilledButton(
-                    child: const Text("submit"),
-                    onPressed: () async {
+                  StickyBottomButtons(
+                    isHorizontal: true,
+                    onSubmit: () async {
                       if (form.isRepot) {
                         final validate = _formKey.currentState?.validate();
-                        if (validate == null || validate == false) return;
+                        if (validate == null || validate == false) {
+                          return;
+                        }
                       }
                       if (form.waterTypeId == null) {
                         if (selectedWaterId != null) {
@@ -721,27 +577,214 @@ class _AddWateringScreenState extends ConsumerState<AddWateringScreen> {
                         Navigator.pop(context);
                       }
                     },
+                    onCancel: () {
+                      Navigator.pop(context);
+                    },
                   ),
-                ),
-                SizedBox(width: 8),
-              ],
-            ),
-          ],
-        ),
-      ),
+                  // SliverFillRemaining(
+                  //   hasScrollBody: false,
+                  //   child: Column(
+                  //     children: [
+                  //       Spacer(),
+                  //       Row(
+                  //         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  //         children: [
+                  //           SizedBox(width: 8),
+                  //           Expanded(
+                  //             child: FilledButton(
+                  //               style: FilledButton.styleFrom(
+                  //                 backgroundColor: dateColors.secondaryColor,
+                  //                 foregroundColor: dateColors.primaryColor,
+                  //               ),
+                  //               onPressed: () {
+                  //                 Navigator.pop(context);
+                  //               },
+                  //               child: const Text("cancel"),
+                  //             ),
+                  //           ),
+                  //           SizedBox(width: 8),
+                  //           Expanded(
+                  //             child: FilledButton(
+                  //               child: const Text("submit"),
+                  //               onPressed: () async {
+                  //                 if (form.isRepot) {
+                  //                   final validate =
+                  //                       _formKey.currentState?.validate();
+                  //                   if (validate == null || validate == false) {
+                  //                     return;
+                  //                   }
+                  //                 }
+                  //                 if (form.waterTypeId == null) {
+                  //                   if (selectedWaterId != null) {
+                  //                     notifier.updateWaterTypeId(
+                  //                       selectedWaterId!,
+                  //                     );
+                  //                   } else {
+                  //                     setState(() {
+                  //                       _validWaterType = false;
+                  //                     });
+                  //                     return;
+                  //                   }
+                  //                 }
+                  //                 notifier.updateNotes(_notesController.text);
+                  //                 if (form.isRepot) {
+                  //                   notifier.updatePotSize(
+                  //                     double.tryParse(_potSizeController.text)!,
+                  //                   );
+                  //                   notifier.updateSoilType(
+                  //                     _soilTypeController.text,
+                  //                   );
+                  //                   notifier.updateRepotNotes(
+                  //                     _repotNotesController.text,
+                  //                   );
+                  //                 }
+
+                  //                 await notifier.submitForm();
+
+                  //                 if (context.mounted) {
+                  //                   Navigator.pop(context);
+                  //                 }
+                  //               },
+                  //             ),
+                  //           ),
+                  //           SizedBox(width: 8),
+                  //         ],
+                  //       ),
+                  //       SizedBox(height: 8),
+                  //     ],
+                  //   ),
+                  // ),
+                ],
+              ),
     );
   }
 
   String _strengthLabel(double strength) {
     // Convert decimal to fraction string
-    if (strength == 2) return "2";
-    if (strength == 1.75) return "1 3/4";
-    if (strength == 1.5) return "1 1/2";
-    if (strength == 1.25) return "1 1/4";
-    if (strength == 1) return "1";
-    if (strength == .75) return "3/4";
-    if (strength == 0.5) return "1/2";
-    if (strength == 0.25) return "1/4";
+    if (strength == 2) return "200%";
+    if (strength == 1.75) return "175%";
+    if (strength == 1.5) return "150%";
+    if (strength == 1.25) return "125%";
+    if (strength == 1) return "100%";
+    if (strength == .75) return "75%";
+    if (strength == 0.5) return "50%";
+    if (strength == 0.25) return "25%";
     return strength.toStringAsFixed(2);
+  }
+
+  // Inside the same class
+
+  Widget _buildFertilizerButton(
+    Accessory fert,
+    bool isSelected,
+    double interval,
+    WateringFormData form,
+    WateringFormNotifier notifier,
+    WidgetRef ref,
+    List<Accessory> fertilizerAccessories,
+  ) {
+    return ElevatedButton.icon(
+      icon: _removeFertTypes ? const Icon(Icons.close) : null,
+      style: ElevatedButton.styleFrom(
+        padding: EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: isSelected ? 0 : 14,
+        ),
+        foregroundColor:
+            (isSelected || _removeFertTypes)
+                ? AppColors.lightTextYellow
+                : AppColors.darkTextYellow,
+        backgroundColor:
+            _removeFertTypes
+                ? AppColors.error
+                : isSelected
+                ? AppColors.primaryYellow
+                : AppColors.secondaryYellow,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      onPressed: () {
+        if (!_removeFertTypes) {
+          if (isSelected) {
+            notifier.removeFertilizer(fert.id);
+          } else {
+            notifier.addFertilizer(fert.id, 1);
+          }
+        } else {
+          notifier.removeFertilizer(fert.id);
+          ref
+              .read(accessoriesNotifierProvider.notifier)
+              .deleteAccessory(fert.id);
+
+          if (fertilizerAccessories.length <= 1) {
+            _removeFertTypes =
+                false; // toggle remove mode off if last one removed
+          }
+        }
+      },
+      label: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(fert.name),
+          if (isSelected && !_removeFertTypes)
+            _buildStrengthAdjuster(fert, interval, form, notifier),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStrengthAdjuster(
+    Accessory fert,
+    double interval,
+    WateringFormData form,
+    WateringFormNotifier notifier,
+  ) {
+    final strength =
+        form.fertilizers.firstWhere((f) => f.accessoryId == fert.id).strength;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 24,
+          height: 46,
+          child: IconButton(
+            style: IconButton.styleFrom(splashFactory: NoSplash.splashFactory),
+            padding: EdgeInsets.zero,
+            iconSize: 22,
+            onPressed: () {
+              final newStrength = (strength - interval).clamp(0.25, 2.0);
+              notifier.updateFertilizerStrength(fert.id, newStrength);
+            },
+            icon: const Icon(Icons.remove, color: Colors.white),
+          ),
+        ),
+        SizedBox(
+          width: 50,
+          child: Text(
+            _strengthLabel(strength),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppColors.lightTextYellow,
+            ),
+          ),
+        ),
+        SizedBox(
+          width: 24,
+          height: 46,
+          child: IconButton(
+            style: IconButton.styleFrom(splashFactory: NoSplash.splashFactory),
+            padding: EdgeInsets.zero,
+            iconSize: 22,
+            onPressed: () {
+              final newStrength = (strength + interval).clamp(0.0, 2.0);
+              notifier.updateFertilizerStrength(fert.id, newStrength);
+            },
+            icon: const Icon(Icons.add, color: Colors.white),
+          ),
+        ),
+      ],
+    );
   }
 }

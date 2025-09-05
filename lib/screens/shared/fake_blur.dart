@@ -5,12 +5,14 @@ class FakeBlur extends StatefulWidget {
   final Widget child;
   final BorderRadius borderRadius;
   final Color? overlay;
+  final EdgeInsets? padding;
 
   const FakeBlur({
     super.key,
     required this.child,
     this.borderRadius = const BorderRadius.all(Radius.circular(16)),
     this.overlay,
+    this.padding,
   });
 
   @override
@@ -168,7 +170,13 @@ class _FakeBlurState extends State<FakeBlur> {
           ),
 
         // Child content on top
-        ClipRRect(borderRadius: widget.borderRadius, child: widget.child),
+        ClipRRect(
+          borderRadius: widget.borderRadius,
+          child: Padding(
+            padding: widget.padding ?? EdgeInsets.zero,
+            child: widget.child,
+          ),
+        ),
       ],
     );
   }

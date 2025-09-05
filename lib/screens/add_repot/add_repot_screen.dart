@@ -7,8 +7,11 @@ import 'package:plant_application/models/repot_data.dart';
 import 'package:plant_application/notifier_providers/db_providers.dart';
 import 'package:plant_application/screens/shared/background_scaffold.dart';
 import 'package:plant_application/screens/shared/custom_app_bar.dart';
+import 'package:plant_application/screens/shared/date_card.dart';
 import 'package:plant_application/screens/shared/fake_blur.dart';
+import 'package:plant_application/screens/shared/sticky_bottom_buttons.dart';
 import 'package:plant_application/screens/shared/text_form_field.dart';
+import 'package:plant_application/screens/shared/text_widgets.dart';
 import 'package:plant_application/theme.dart';
 import 'package:plant_application/utils/datetime_extensions.dart';
 
@@ -49,14 +52,18 @@ class _AddRepotScreenState extends ConsumerState<AddRepotScreen> {
   }
 
   Future<void> _pickDate(BuildContext context) async {
-    _pickedDate =
+    final selected =
         await showDatePicker(
           context: context,
-          initialDate: widget.initialData?.date ?? DateTime.now(),
+          initialDate: _pickedDate,
           firstDate: DateTime(2023),
           lastDate: DateTime.now(),
         ) ??
         DateTimeHelpers.getNowTruncated();
+
+    setState(() {
+      _pickedDate = selected;
+    });
   }
 
   Future<bool> _submit() async {
@@ -106,118 +113,78 @@ class _AddRepotScreenState extends ConsumerState<AddRepotScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SelectionColorScheme.blue;
     return BackgroundScaffold(
       appBar: CustomAppBar(title: "repot event"),
-      body: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: FakeBlur(
-                  borderRadius: BorderRadius.zero,
-                  overlay: AppColors.secondaryBlue.withAlpha(200),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-                    child: Column(
-                      // spacing: 8,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "date",
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.darkTextBlue,
-                              ),
-                            ),
-                            ElevatedButton.icon(
-                              onPressed: () => _pickDate(context),
-                              icon: Icon(Icons.calendar_month),
-                              label: Text(
-                                "${_pickedDate.month}/${_pickedDate.day}/${_pickedDate.year}",
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Form(
-                          key: _formKey,
-                          child: Column(
-                            spacing: 4,
-                            children: [
-                              ThemedTextFormField(
-                                controller: _potSizeController,
-                                label: "pot size",
-                                fillColor: AppColors.secondaryBlue,
-                                textColor: AppColors.darkTextBlue,
-                                keyboardType: TextInputType.number,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter a pot size';
-                                  }
-                                  if (double.tryParse(value) == null) {
-                                    return 'Please ensure pot size is a number';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              ThemedTextFormField(
-                                controller: _soilTypeController,
-                                label: "soil type",
-                                fillColor: AppColors.secondaryBlue,
-                                textColor: AppColors.darkTextBlue,
-                              ),
-                              ThemedTextFormField(
-                                controller: _notesController,
-                                label: 'notes',
-                                fillColor: AppColors.secondaryBlue,
-                                textColor: AppColors.darkTextBlue,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+      body: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            sliver: SliverToBoxAdapter(
+              child: FakeBlur(
+                borderRadius: BorderRadius.zero,
+                overlay: colors.secondaryColor.withAlpha(200),
+                padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Column(
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: SectionTitleText(
+                        "repotting info",
+                        color: colors.textColor,
+                      ),
                     ),
-                  ),
+                    DateCard(
+                      colors: colors,
+                      titleText: "date",
+                      onTap: () => _pickDate(context),
+                      dateText:
+                          "${_pickedDate.month}/${_pickedDate.day}/${_pickedDate.year}",
+                    ),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        spacing: 8,
+                        children: [
+                          ThemedTextFormField(
+                            controller: _potSizeController,
+                            label: "pot size",
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter a pot size';
+                              }
+                              if (double.tryParse(value) == null) {
+                                return 'Please ensure pot size is a number';
+                              }
+                              return null;
+                            },
+                          ),
+                          ThemedTextFormField(
+                            controller: _soilTypeController,
+                            label: "soil type",
+                          ),
+                          ThemedTextFormField(
+                            controller: _notesController,
+                            label: 'notes',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    child: const Text("submit"),
-                    onPressed: () async {
-                      final success = await _submit();
-                      if (context.mounted && success) {
-                        Navigator.pop(context);
-                      }
-                    },
-                  ),
-                ),
-                SizedBox(height: 4),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.secondaryBlue,
-                      foregroundColor: AppColors.darkTextBlue,
-                    ),
-                    child: const Text("cancel"),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                ),
-              ],
-            ),
+
+          StickyBottomButtons(
+            onSubmit: () async {
+              final success = await _submit();
+              if (context.mounted && success) {
+                Navigator.pop(context);
+              }
+            },
+            onCancel: () => Navigator.pop(context),
           ),
         ],
       ),

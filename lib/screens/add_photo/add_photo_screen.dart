@@ -7,7 +7,14 @@ import 'package:image_picker/image_picker.dart';
 import 'package:plant_application/database/plant_app_db.dart';
 import 'package:plant_application/notifier_providers/photos_provider.dart';
 import 'package:plant_application/screens/add_plant/widgets/full_screen_image_page.dart';
-import 'package:plant_application/screens/add_plant/widgets/image_source_sheet.dart';
+import 'package:plant_application/screens/shared/image_source_sheet.dart';
+import 'package:plant_application/screens/shared/background_scaffold.dart';
+import 'package:plant_application/screens/shared/custom_app_bar.dart';
+import 'package:plant_application/screens/shared/date_card.dart';
+import 'package:plant_application/screens/shared/fake_blur.dart';
+import 'package:plant_application/screens/shared/sticky_bottom_buttons.dart';
+import 'package:plant_application/screens/shared/text_form_field.dart';
+import 'package:plant_application/theme.dart';
 
 class AddPhotoScreen extends ConsumerStatefulWidget {
   const AddPhotoScreen({
@@ -15,11 +22,13 @@ class AddPhotoScreen extends ConsumerStatefulWidget {
     required this.plantId,
     this.initialData,
     this.initialImage,
+    this.initialDate,
   });
 
   final int plantId;
   final Photo? initialData;
   final XFile? initialImage;
+  final DateTime? initialDate;
 
   @override
   ConsumerState<AddPhotoScreen> createState() => _AddPhotoScreenState();
@@ -33,6 +42,7 @@ class _AddPhotoScreenState extends ConsumerState<AddPhotoScreen> {
   late bool isEdit;
   bool _isPrimary = false;
   bool _isFirst = false;
+  final colors = SelectionColorScheme.blue;
 
   @override
   void dispose() {
@@ -53,7 +63,7 @@ class _AddPhotoScreenState extends ConsumerState<AddPhotoScreen> {
       _pickedDate = DateTime.parse(initial.date);
     } else {
       _pickedImage = widget.initialImage;
-      _pickedDate = DateTime.now();
+      _pickedDate = widget.initialDate ?? DateTime.now();
     }
   }
 
@@ -89,7 +99,7 @@ class _AddPhotoScreenState extends ConsumerState<AddPhotoScreen> {
         plantId: Value(widget.plantId),
         filePath: Value(photoPath),
         date: Value(_pickedDate.toString()),
-        notes: notes.isNotEmpty ? Value(notes) : Value.absent(),
+        notes: notes.isNotEmpty ? Value(notes) : Value(null),
         isPrimary: Value(_isPrimary),
       );
       notifier.insertPhoto(photoCompanion);
@@ -98,7 +108,7 @@ class _AddPhotoScreenState extends ConsumerState<AddPhotoScreen> {
       final photoCompanion = PhotosCompanion(
         id: Value(widget.initialData!.id),
         date: Value(_pickedDate.toString()),
-        notes: notes.isNotEmpty ? Value(notes) : Value.absent(),
+        notes: notes.isNotEmpty ? Value(notes) : Value(null),
         isPrimary: Value(_isPrimary),
       );
       notifier.updatePhoto(photoCompanion);
@@ -114,178 +124,187 @@ class _AddPhotoScreenState extends ConsumerState<AddPhotoScreen> {
     if (_isFirst) {
       _isPrimary = true;
     }
-    return Scaffold(
-      appBar: AppBar(title: const Text("Add a photo")),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (!_isFirst && !(widget.initialData != null && _isPrimary))
-              TextButton.icon(
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  splashFactory: NoSplash.splashFactory,
-                  overlayColor: Colors.transparent,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _isPrimary = !_isPrimary;
-                  });
-                },
-                icon: Icon(
-                  _isPrimary ? Icons.star : Icons.star_border,
-                  size: 24,
-                ),
-                label: Text("make primary cover photo"),
-              ),
-            Stack(
-              alignment: Alignment.topRight,
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    if (_pickedImage != null) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (_) => FullscreenImagePage(
-                                imagePath: _pickedImage!.path,
-                              ),
-                        ),
-                      );
-                    }
-                  },
-                  child: AspectRatio(
-                    aspectRatio: 3 / 4,
-                    child:
-                        _pickedImage != null
-                            ? ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.file(
-                                File(_pickedImage!.path),
-                                fit: BoxFit.cover,
-                              ),
-                            )
-                            : TextButton.icon(
-                              style: TextButton.styleFrom(
-                                backgroundColor: const Color.fromARGB(
-                                  160,
-                                  0,
-                                  0,
-                                  0,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
 
-                              icon: const Icon(
-                                Icons.add_a_photo,
-                                color: Colors.white,
-                              ),
-                              label: const Text(
-                                "select Photo",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              onPressed: () async {
-                                await _showImageSourceActionSheet(context);
-                              },
+    return BackgroundScaffold(
+      appBar: CustomAppBar(title: "add a photo"),
+      body: FakeBlur(
+        borderRadius: BorderRadius.zero,
+        overlay: colors.secondaryColor.withAlpha(150),
+        child: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Stack(
+                        alignment: Alignment.topRight,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              if (_pickedImage != null) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (_) => FullscreenImagePage(
+                                          imagePath: _pickedImage!.path,
+                                        ),
+                                  ),
+                                );
+                              }
+                            },
+                            child: AspectRatio(
+                              aspectRatio: 3 / 4,
+                              child:
+                                  _pickedImage != null
+                                      ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.file(
+                                          File(_pickedImage!.path),
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                      : TextButton.icon(
+                                        style: TextButton.styleFrom(
+                                          backgroundColor: const Color.fromARGB(
+                                            160,
+                                            0,
+                                            0,
+                                            0,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                        ),
+
+                                        icon: const Icon(
+                                          Icons.add_a_photo,
+                                          color: Colors.white,
+                                        ),
+                                        label: const Text(
+                                          "select photo",
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                        onPressed: () async {
+                                          await ImageSourceSheet.show(
+                                            context,
+                                            onImageSelected: (image, date) {
+                                              setState(() {
+                                                _pickedImage = image;
+                                                _pickedDate =
+                                                    date ?? DateTime.now();
+                                              });
+                                            },
+                                          );
+                                        },
+                                      ),
                             ),
-                  ),
-                ),
-                if (_pickedImage != null)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: GestureDetector(
-                      onTap: () async {
-                        await _showImageSourceActionSheet(context);
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black45,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Icon(
-                            Icons.edit,
-                            color: Colors.white,
-                            size: 24,
                           ),
-                        ),
+                          if (_pickedImage != null)
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.black38,
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(8),
+                                  topRight: Radius.circular(8),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    (!_isFirst &&
+                                            !(widget.initialData != null &&
+                                                _isPrimary))
+                                        ? MainAxisAlignment.spaceBetween
+                                        : MainAxisAlignment.end,
+                                children: [
+                                  if (!_isFirst &&
+                                      !(widget.initialData != null &&
+                                          _isPrimary))
+                                    TextButton.icon(
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Colors.white,
+                                        padding: EdgeInsets.zero,
+                                        splashFactory: NoSplash.splashFactory,
+                                        overlayColor: Colors.transparent,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _isPrimary = !_isPrimary;
+                                        });
+                                      },
+                                      icon: Icon(
+                                        _isPrimary
+                                            ? Icons.star
+                                            : Icons.star_border,
+                                        size: 24,
+                                      ),
+                                      label: Text("set as cover photo"),
+                                    ),
+                                  if (_pickedImage != null)
+                                    IconButton(
+                                      onPressed: () async {
+                                        await ImageSourceSheet.show(
+                                          context,
+                                          onImageSelected: (image, date) async {
+                                            if (image != null) {
+                                              setState(() {
+                                                _pickedImage = image;
+                                                _pickedDate =
+                                                    date ?? DateTime.now();
+                                              });
+                                            }
+                                          },
+                                        );
+                                      },
+                                      icon: Icon(
+                                        Icons.edit,
+                                        color: Colors.white,
+                                        size: 24,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                        ],
                       ),
-                    ),
+                      SizedBox(height: 8),
+                      DateCard(
+                        titleText: "photo date",
+                        colors: colors,
+                        onTap: () => _pickDate(context),
+                        dateText:
+                            "${_pickedDate.month}/${_pickedDate.day}/${_pickedDate.year}",
+                      ),
+                      ThemedTextFormField(
+                        controller: _notesController,
+                        label: "notes",
+                        hint: "optional",
+                      ),
+                    ],
                   ),
-              ],
+                ]),
+              ),
             ),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Date",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () => _pickDate(context),
-                  icon: Icon(Icons.calendar_month),
-                  label: Text(
-                    "${_pickedDate.month}/${_pickedDate.day}/${_pickedDate.year}",
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            TextFormField(
-              decoration: const InputDecoration(labelText: "Notes (optional)"),
-              controller: _notesController,
-            ),
-
-            const SizedBox(height: 30),
-
-            // Submit & Cancel buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.check),
-                  label: const Text("Submit"),
-                  onPressed: () async {
-                    final success = await _submit();
-                    if (context.mounted && success) {
-                      Navigator.pop(context);
-                    }
-                  },
-                ),
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.close),
-                  label: const Text("Cancel"),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
+            StickyBottomButtons(
+              onSubmit: () async {
+                final success = await _submit();
+                if (context.mounted && success) {
+                  Navigator.pop(context);
+                }
+              },
+              onCancel: () => Navigator.pop(context),
+              isHorizontal: true,
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Future<void> _showImageSourceActionSheet(BuildContext context) async {
-    showModalBottomSheet(
-      context: context,
-      builder:
-          (context) => ImageSourceSheet(
-            onImageSelected: (image) {
-              Navigator.pop(context);
-              setState(() {
-                _pickedImage = image;
-              });
-            },
-          ),
     );
   }
 }

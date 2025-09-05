@@ -21,11 +21,54 @@ class AppColors {
   static Color darkTextGreen = const Color.fromRGBO(75, 118, 83, 1);
   static Color darkTextPink = const Color.fromRGBO(159, 74, 125, 1);
   static Color darkTextYellow = const Color.fromRGBO(126, 96, 22, 1);
+
+  static Color error = const Color.fromARGB(255, 178, 26, 67);
+}
+
+class SelectionColorScheme {
+  const SelectionColorScheme({
+    required this.primaryColor,
+    required this.secondaryColor,
+    required this.textColor,
+    required this.selectedTextColor,
+  });
+
+  final Color primaryColor;
+  final Color secondaryColor;
+  final Color textColor;
+  final Color selectedTextColor;
+
+  // Predefined color schemes
+  static final yellow = SelectionColorScheme(
+    primaryColor: AppColors.primaryYellow,
+    secondaryColor: AppColors.secondaryYellow,
+    textColor: AppColors.darkTextYellow,
+    selectedTextColor: AppColors.lightTextYellow,
+  );
+
+  static final pink = SelectionColorScheme(
+    primaryColor: AppColors.primaryPink,
+    secondaryColor: AppColors.secondaryPink,
+    textColor: AppColors.darkTextPink,
+    selectedTextColor: AppColors.lightTextPink,
+  );
+
+  static final green = SelectionColorScheme(
+    primaryColor: AppColors.primaryGreen,
+    secondaryColor: AppColors.secondaryGreen,
+    textColor: AppColors.darkTextGreen,
+    selectedTextColor: AppColors.lightTextGreen,
+  );
+
+  static final blue = SelectionColorScheme(
+    primaryColor: AppColors.primaryBlue,
+    secondaryColor: AppColors.secondaryBlue,
+    textColor: AppColors.darkTextBlue,
+    selectedTextColor: AppColors.lightTextBlue,
+  );
 }
 
 ThemeData primaryTheme = ThemeData(
-  // text theme
-  // textTheme: GoogleFonts.interTextTheme(),
   textTheme: GoogleFonts.interTextTheme().copyWith(
     bodyLarge: GoogleFonts.inter(
       fontSize: 16,
@@ -42,10 +85,8 @@ ThemeData primaryTheme = ThemeData(
       color: Colors.white,
       fontWeight: FontWeight.w700,
     ),
-    // labelLarge: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold),
   ),
 
-  // app bar theme colors
   appBarTheme: AppBarTheme(
     backgroundColor: AppColors.primaryBlue,
     elevation: 0,
@@ -125,13 +166,13 @@ ThemeData primaryTheme = ThemeData(
     errorStyle: GoogleFonts.inter(
       fontWeight: FontWeight.w600,
       fontSize: 16,
-      color: Colors.red,
+      color: AppColors.error,
     ),
     errorBorder: UnderlineInputBorder(
-      borderSide: BorderSide(color: Colors.red),
+      borderSide: BorderSide(color: AppColors.error),
     ),
     focusedErrorBorder: UnderlineInputBorder(
-      borderSide: BorderSide(color: Colors.red),
+      borderSide: BorderSide(color: AppColors.error),
     ),
     border: UnderlineInputBorder(
       borderSide: BorderSide(color: AppColors.primaryBlue),
@@ -141,11 +182,19 @@ ThemeData primaryTheme = ThemeData(
     ),
   ),
 
+  dividerTheme: DividerThemeData(
+    color: AppColors.primaryBlue,
+    space: 0,
+    thickness: 1,
+    indent: 0,
+    endIndent: 0,
+  ),
   datePickerTheme: DatePickerThemeData(
     weekdayStyle: TextStyle(
       color: AppColors.darkTextBlue,
       fontWeight: FontWeight.bold,
     ),
+    headerHelpStyle: TextStyle(color: AppColors.darkTextBlue),
 
     backgroundColor: AppColors.secondaryBlue,
     dividerColor: AppColors.primaryBlue,
@@ -160,6 +209,9 @@ ThemeData primaryTheme = ThemeData(
     dayForegroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
       if (states.contains(WidgetState.selected)) {
         return Colors.white;
+      }
+      if (states.contains(WidgetState.disabled)) {
+        return AppColors.primaryBlue.withAlpha(100);
       }
       return AppColors.primaryBlue;
     }),
@@ -206,30 +258,13 @@ ThemeData primaryTheme = ThemeData(
     ),
   ),
 
-  dividerTheme: DividerThemeData(
-    color: AppColors.primaryGreen,
-    space: 0,
-    thickness: 1,
-    indent: 0,
-    endIndent: 0,
+  sliderTheme: SliderThemeData.fromPrimaryColors(
+    primaryColor: AppColors.primaryYellow,
+    primaryColorDark: AppColors.darkTextYellow,
+    primaryColorLight: AppColors.lightTextYellow,
+    valueIndicatorTextStyle: TextStyle(
+      color: Colors.white70,
+      fontWeight: FontWeight.bold,
+    ),
   ),
 );
-
-// InputDecoration inputDecoration(
-//   String label,
-//   Color fillColor,
-//   Color textColor,
-// ) {
-//   return InputDecoration(
-//     filled: true,
-//     fillColor: fillColor,
-//     enabledBorder: UnderlineInputBorder(
-//       borderSide: BorderSide(color: textColor, width: 1),
-//     ),
-//     focusedBorder: UnderlineInputBorder(
-//       borderSide: BorderSide(color: textColor, width: 2),
-//     ),
-//     labelText: label,
-//     labelStyle: TextStyle(color: textColor),
-//   );
-// }

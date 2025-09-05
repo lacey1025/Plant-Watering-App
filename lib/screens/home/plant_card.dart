@@ -7,33 +7,33 @@ class PlantCard extends StatelessWidget {
   final PlantCardData plant;
   const PlantCard({super.key, required this.plant});
 
-  Color _getCardColor() {
-    if (plant.wateringStatus == null) return Colors.white;
+  SelectionColorScheme _getColorScheme() {
+    if (plant.wateringStatus == null) return SelectionColorScheme.blue;
     switch (plant.wateringStatus) {
       case WateringStatus.green:
-        return AppColors.primaryGreen;
+        return SelectionColorScheme.green;
       case WateringStatus.yellow:
-        return AppColors.primaryYellow;
+        return SelectionColorScheme.yellow;
       case WateringStatus.red:
-        return AppColors.primaryPink;
+        return SelectionColorScheme.pink;
       default:
-        return AppColors.primaryBlue;
+        return SelectionColorScheme.blue;
     }
   }
 
-  Color _getTextColor() {
-    if (plant.wateringStatus == null) return Colors.white;
-    switch (plant.wateringStatus) {
-      case WateringStatus.green:
-        return AppColors.lightTextGreen;
-      case WateringStatus.yellow:
-        return AppColors.lightTextYellow;
-      case WateringStatus.red:
-        return AppColors.lightTextPink;
-      default:
-        return AppColors.lightTextBlue;
-    }
-  }
+  // Color _getTextColor() {
+  //   if (plant.wateringStatus == null) return Colors.white;
+  //   switch (plant.wateringStatus) {
+  //     case WateringStatus.green:
+  //       return AppColors.lightTextGreen;
+  //     case WateringStatus.yellow:
+  //       return AppColors.lightTextYellow;
+  //     case WateringStatus.red:
+  //       return AppColors.lightTextPink;
+  //     default:
+  //       return AppColors.lightTextBlue;
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +47,8 @@ class PlantCard extends StatelessWidget {
             '${plant.earliestNextWater!.month}/${plant.earliestNextWater!.day} - ${plant.latestNextWater!.month}/${plant.latestNextWater!.day}';
       }
     }
+    final colors = _getColorScheme();
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -57,7 +59,7 @@ class PlantCard extends StatelessWidget {
         );
       },
       child: Card(
-        color: _getCardColor(),
+        color: colors.primaryColor,
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
@@ -74,9 +76,9 @@ class PlantCard extends StatelessWidget {
                   if (plant.plant.inWateringSchedule)
                     Text(
                       plant.daysUntilDueStatus(),
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(color: _getTextColor()),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: colors.selectedTextColor,
+                      ),
                     ),
                 ],
               ),
@@ -87,15 +89,15 @@ class PlantCard extends StatelessWidget {
                     (plant.plant.inWateringSchedule && plant.schedule != null)
                         ? 'water every ${plant.schedule!.frequency} days'
                         : "not in watering schedule",
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: _getTextColor()),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colors.selectedTextColor,
+                    ),
                   ),
                   if (plant.plant.inWateringSchedule)
                     Text(
                       dueDateString,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: _getTextColor(),
+                        color: colors.selectedTextColor,
                         // fontWeight: FontWeight.bold,
                       ),
                     ),

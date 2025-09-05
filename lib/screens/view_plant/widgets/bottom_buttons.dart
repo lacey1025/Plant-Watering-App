@@ -26,7 +26,7 @@ class BottomButtons extends ConsumerWidget {
           ),
           plantId: plant.plant.id,
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Row(
           children: [
             Expanded(

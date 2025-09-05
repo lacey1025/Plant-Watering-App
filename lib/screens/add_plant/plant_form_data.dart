@@ -61,7 +61,7 @@ class PlantFormData {
     return PlantsCompanion(
       name: Value(name),
       inWateringSchedule: Value(inSchedule),
-      notes: Value(notes),
+      notes: notes.isNotEmpty ? Value(notes) : Value(null),
       dateAdded: Value(DateTime.now().dateTimeToDateString()),
       minWateringDays: Value(intFrequency * 0.9), // 10% buffer below
       maxWateringDays: Value(intFrequency * 1.1), // 10% buffer above
@@ -75,7 +75,10 @@ class PlantFormData {
       plantId: Value(plantId),
       date: Value(photoDate.toString()),
       filePath: Value(filepath),
-      notes: Value(photoNotes),
+      notes:
+          (photoNotes != null && photoNotes!.isEmpty)
+              ? Value(null)
+              : Value(photoNotes),
       isPrimary: Value(true),
     );
   }
@@ -84,7 +87,7 @@ class PlantFormData {
     return PlantsCompanion(
       name: Value(name),
       inWateringSchedule: Value(inSchedule),
-      notes: notes.isNotEmpty ? Value(notes) : Value.absent(),
+      notes: notes.isNotEmpty ? Value(notes) : Value(null),
       dateAdded: Value(DateTime.now().dateTimeToDateString()),
     );
   }

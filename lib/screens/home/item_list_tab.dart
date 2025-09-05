@@ -16,29 +16,17 @@ class ItemListTab extends ConsumerWidget {
     required this.emptyMessage,
   });
 
-  ({Color textColor, Color fillColor}) _getColor(int index) {
+  SelectionColorScheme _getColorScheme(int index) {
     final num = index % 4;
     switch (num) {
       case 0:
-        return (
-          textColor: AppColors.lightTextPink,
-          fillColor: AppColors.primaryPink,
-        );
+        return SelectionColorScheme.pink;
       case 1:
-        return (
-          textColor: AppColors.lightTextYellow,
-          fillColor: AppColors.primaryYellow,
-        );
+        return SelectionColorScheme.yellow;
       case 2:
-        return (
-          textColor: AppColors.lightTextGreen,
-          fillColor: AppColors.primaryGreen,
-        );
+        return SelectionColorScheme.green;
       default:
-        return (
-          textColor: AppColors.lightTextBlue,
-          fillColor: AppColors.primaryBlue,
-        );
+        return SelectionColorScheme.blue;
     }
   }
 
@@ -61,10 +49,10 @@ class ItemListTab extends ConsumerWidget {
     return ListView.builder(
       itemCount: items.length,
       itemBuilder: (context, index) {
-        final colors = _getColor(index);
+        final colors = _getColorScheme(index);
         final item = items[index];
         return Card(
-          color: colors.fillColor,
+          color: colors.primaryColor,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
             child: Row(
@@ -80,13 +68,13 @@ class ItemListTab extends ConsumerWidget {
                         ).textTheme.bodyLarge?.copyWith(color: Colors.white),
                         softWrap: true,
                       ),
-                      Text(
-                        item.notes ?? "",
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: colors.textColor,
+                      if (item.notes != null && item.notes!.isNotEmpty)
+                        Text(
+                          item.notes ?? "",
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: colors.selectedTextColor),
+                          softWrap: true,
                         ),
-                        softWrap: true,
-                      ),
                     ],
                   ),
                 ),
@@ -94,7 +82,7 @@ class ItemListTab extends ConsumerWidget {
                 IconButton(
                   padding: EdgeInsets.only(left: 8),
                   iconSize: 20,
-                  color: colors.textColor,
+                  color: colors.selectedTextColor,
                   icon: const Icon(Icons.edit),
                   onPressed: () {
                     final type = EventType.toEvent(item.type);
@@ -104,7 +92,7 @@ class ItemListTab extends ConsumerWidget {
                 ),
                 IconButton(
                   iconSize: 20,
-                  color: colors.textColor,
+                  color: colors.selectedTextColor,
                   icon: const Icon(Icons.delete),
                   onPressed: () {
                     notifier.deleteAccessory(item.id);

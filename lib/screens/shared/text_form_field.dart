@@ -1,34 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:plant_application/theme.dart';
 
 class ThemedTextFormField extends StatelessWidget {
   final TextEditingController controller;
   final String? label;
   final String? hint;
-  final Color fillColor;
-  final Color textColor;
+  final SelectionColorScheme colorScheme;
   final TextInputType keyboardType;
   final String? Function(String?)? validator;
 
-  const ThemedTextFormField({
+  ThemedTextFormField({
     super.key,
     required this.controller,
     this.label,
     this.hint,
-    required this.fillColor,
-    required this.textColor,
+    SelectionColorScheme? colorScheme,
     this.keyboardType = TextInputType.text,
     this.validator,
-  });
+  }) : colorScheme = colorScheme ?? SelectionColorScheme.blue;
 
   @override
   Widget build(BuildContext context) {
     return Theme(
       data: Theme.of(context).copyWith(
         textSelectionTheme: TextSelectionThemeData(
-          cursorColor: textColor,
-          selectionColor: textColor.withAlpha(70),
-          selectionHandleColor: textColor,
+          cursorColor: colorScheme.textColor,
+          selectionColor: colorScheme.textColor.withAlpha(70),
+          selectionHandleColor: colorScheme.textColor,
         ),
       ),
       child: TextFormField(
@@ -37,29 +36,40 @@ class ThemedTextFormField extends StatelessWidget {
         validator: validator,
         style: Theme.of(
           context,
-        ).textTheme.bodyMedium?.copyWith(color: textColor),
+        ).textTheme.bodyMedium?.copyWith(color: colorScheme.textColor),
         minLines: 1,
         maxLines: 6,
+        cursorErrorColor: colorScheme.textColor,
         decoration: InputDecoration(
           filled: true,
-          fillColor: fillColor,
+          fillColor: colorScheme.secondaryColor,
           enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: textColor, width: 1),
+            borderSide: BorderSide(color: colorScheme.textColor, width: 1),
           ),
           focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: textColor, width: 2),
+            borderSide: BorderSide(color: colorScheme.textColor, width: 2),
           ),
           labelText: label,
           hintText: hint,
           hintStyle: GoogleFonts.inter(
-            color: textColor.withAlpha(180),
+            color: colorScheme.textColor.withAlpha(180),
             fontStyle: FontStyle.italic,
             fontWeight: FontWeight.normal,
             fontSize: 16,
           ),
-          labelStyle: Theme.of(
+          labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: colorScheme.textColor,
+            fontSize: 16,
+          ),
+          errorStyle: Theme.of(
             context,
-          ).textTheme.bodyMedium?.copyWith(color: textColor, fontSize: 16),
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.error),
+          errorBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: AppColors.error, width: 1),
+          ),
+          focusedErrorBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: AppColors.error, width: 1),
+          ),
         ),
       ),
     );

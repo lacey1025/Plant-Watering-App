@@ -2,11 +2,18 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:plant_application/screens/add_plant/widgets/full_screen_image_page.dart';
-import 'package:plant_application/screens/add_plant/widgets/image_source_sheet.dart';
+import 'package:plant_application/screens/shared/image_source_sheet.dart';
 import 'package:plant_application/screens/add_plant/plant_form_data.dart';
 import 'package:plant_application/screens/add_plant/plant_form_notifier.dart';
-import 'package:plant_application/screens/home/home_screen.dart';
+import 'package:plant_application/screens/shared/background_scaffold.dart';
+import 'package:plant_application/screens/shared/custom_app_bar.dart';
+import 'package:plant_application/screens/shared/date_card.dart';
+import 'package:plant_application/screens/shared/fake_blur.dart';
+import 'package:plant_application/screens/shared/sticky_bottom_buttons.dart';
+import 'package:plant_application/screens/shared/text_form_field.dart';
+import 'package:plant_application/screens/shared/text_widgets.dart';
 import 'package:plant_application/theme.dart';
 
 class AddPlantScreen extends ConsumerStatefulWidget {
@@ -56,9 +63,7 @@ class _AddPlantScreenState extends ConsumerState<AddPlantScreen> {
       notifier.updatePlant();
     }
 
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
+    Navigator.pop(context);
   }
 
   Future<void> _pickDate({
@@ -66,7 +71,8 @@ class _AddPlantScreenState extends ConsumerState<AddPlantScreen> {
     DateTime? initialDate,
     required void Function(DateTime) onPicked,
   }) async {
-    final form = ref.watch(plantFormProvider(widget.form));
+    // final form = ref.watch(plantFormProvider(widget.form));
+
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: initialDate ?? DateTime.now(),
@@ -74,27 +80,9 @@ class _AddPlantScreenState extends ConsumerState<AddPlantScreen> {
       lastDate: DateTime.now(),
     );
 
-    if (picked != null && picked != form.lastWatered) {
+    if (picked != null) {
       onPicked(picked);
     }
-  }
-
-  Future<void> _showImageSourceActionSheet(BuildContext context) async {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.secondaryBlue,
-      builder:
-          (context) => ImageSourceSheet(
-            onImageSelected: (image) {
-              Navigator.of(context).pop();
-              if (image != null) {
-                ref
-                    .read(plantFormProvider(widget.form).notifier)
-                    .updatePickedImage(image);
-              }
-            },
-          ),
-    );
   }
 
   @override
@@ -102,186 +90,299 @@ class _AddPlantScreenState extends ConsumerState<AddPlantScreen> {
     final form = ref.watch(plantFormProvider(widget.form));
     final notifier = ref.read(plantFormProvider(widget.form).notifier);
     final isAdd = widget.form == null;
+    final aboutColors = SelectionColorScheme.pink;
+    final waterColors = SelectionColorScheme.yellow;
+    final photoColors = SelectionColorScheme.green;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(isAdd ? "Add Plant" : "Edit Plant")),
-      body: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: "Name"),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Name is required';
-                  }
-                  return null;
-                },
-              ),
-              Row(
-                children: [
-                  const Text("Add to watering schedule"),
-                  Switch(
-                    value: form.inSchedule,
-                    onChanged: notifier.updateWateringSchedule,
-                  ),
-                ],
-              ),
-              if (form.inSchedule) ...[
-                const SizedBox(height: 8),
-                const Text("Estimated Watering Frequency"),
-                Slider(
-                  value: form.frequency,
-                  min: 0,
-                  max: 30,
-                  divisions: 30,
-                  label: "${form.frequency}",
-                  onChanged: notifier.updateWateringFrequency,
-                ),
-                Text('Every ${form.frequency.toInt()} days'),
-              ],
-              const SizedBox(height: 8),
-              if (isAdd)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Text("Date last watered"),
-                    ElevatedButton.icon(
-                      onPressed:
-                          () => _pickDate(
-                            context: context,
-                            initialDate: form.lastWatered,
-                            onPicked: (pickedPhoto) {
-                              notifier.updateLastWatered(pickedPhoto);
-                            },
-                          ),
-                      icon: Icon(Icons.calendar_month),
-                      label:
-                          (form.lastWatered == null)
-                              ? Text("Choose a date")
-                              : Text(
-                                "${form.lastWatered!.month}/${form.lastWatered!.day}/${form.lastWatered!.year}",
-                              ),
-                    ),
-                  ],
-                ),
-              TextField(
-                controller: _notesController,
-                decoration: const InputDecoration(labelText: "Notes"),
-                maxLines: null,
-              ),
-              if (form.pickedImage != null)
-                Stack(
-                  alignment: Alignment.topRight,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => FullscreenImagePage(
-                                  imagePath: form.pickedImage!.path,
-                                ),
-                          ),
-                        );
-                      },
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.file(
-                          File(form.pickedImage!.path),
-                          width: double.infinity,
-                          height: 100,
-                          fit: BoxFit.cover,
+    return BackgroundScaffold(
+      appBar: CustomAppBar(title: isAdd ? "add plant" : "edit plant"),
+      body: Form(
+        key: _formKey,
+        child: CustomScrollView(
+          slivers: [
+            // Main content
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  // About section
+                  FakeBlur(
+                    borderRadius: BorderRadius.zero,
+                    overlay: aboutColors.secondaryColor.withAlpha(200),
+                    padding: EdgeInsets.fromLTRB(8, 8, 8, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SectionTitleText("about", color: aboutColors.textColor),
+
+                        ThemedTextFormField(
+                          controller: _nameController,
+                          colorScheme: aboutColors,
+                          hint: "choose a name for your plant",
+                          label: "name",
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'name is required';
+                            }
+                            return null;
+                          },
                         ),
-                      ),
+                        SizedBox(height: 8),
+                        ThemedTextFormField(
+                          controller: _notesController,
+                          colorScheme: aboutColors,
+                          label: "notes",
+                          hint: "(optional)",
+                        ),
+                      ],
                     ),
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: GestureDetector(
-                        onTap: () {
-                          _photoNotesController.clear();
-                          notifier.updatePhotoDate(DateTime.now());
-                          notifier.updatePickedImage(null);
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black54,
-                            shape: BoxShape.circle,
+                  ),
+
+                  SizedBox(height: 8),
+
+                  // Watering info section
+                  FakeBlur(
+                    borderRadius: BorderRadius.zero,
+                    overlay: waterColors.secondaryColor.withAlpha(200),
+                    padding: EdgeInsets.fromLTRB(8, 8, 8, 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SectionTitleText(
+                          "watering info",
+                          color: waterColors.textColor,
+                        ),
+
+                        if (isAdd)
+                          DateCard(
+                            colors: waterColors,
+                            titleText: "date last watered",
+                            onTap:
+                                () => _pickDate(
+                                  context: context,
+                                  initialDate: form.lastWatered,
+                                  onPicked: (pickedDate) {
+                                    notifier.updateLastWatered(pickedDate);
+                                  },
+                                ),
+                            dateText:
+                                form.lastWatered == null
+                                    ? "choose a date"
+                                    : "${form.lastWatered!.month}/${form.lastWatered!.day}/${form.lastWatered!.year}",
                           ),
-                          child: const Padding(
-                            padding: EdgeInsets.all(4.0),
-                            child: Icon(
-                              Icons.close,
-                              color: Colors.white,
-                              size: 24,
+
+                        Card(
+                          color: waterColors.secondaryColor,
+                          child: Padding(
+                            padding: EdgeInsets.all(12),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "add to watering schedule",
+                                      style: GoogleFonts.inter(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: waterColors.textColor,
+                                      ),
+                                    ),
+                                    Switch(
+                                      activeColor: const Color.fromARGB(
+                                        255,
+                                        168,
+                                        136,
+                                        53,
+                                      ),
+                                      inactiveTrackColor: waterColors
+                                          .selectedTextColor
+                                          .withAlpha(100),
+                                      inactiveThumbColor:
+                                          waterColors.primaryColor,
+                                      trackOutlineColor:
+                                          WidgetStateProperty.all(
+                                            waterColors.primaryColor,
+                                          ),
+                                      value: form.inSchedule,
+                                      onChanged:
+                                          notifier.updateWateringSchedule,
+                                    ),
+                                  ],
+                                ),
+                                if (form.inSchedule) ...[
+                                  Divider(color: waterColors.primaryColor),
+                                  const SizedBox(height: 16),
+                                  Align(
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      "estimated watering frequency",
+                                      style: GoogleFonts.inter(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: waterColors.textColor,
+                                      ),
+                                    ),
+                                  ),
+                                  Slider(
+                                    value: form.frequency,
+                                    min: 0,
+                                    max: 30,
+                                    divisions: 30,
+                                    label: "${form.frequency}",
+                                    onChanged: notifier.updateWateringFrequency,
+                                  ),
+                                  Align(
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      'every ${form.frequency.toInt()} days',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        color: waterColors.textColor,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
 
-              ElevatedButton(
-                onPressed: () async {
-                  await _showImageSourceActionSheet(context);
-                },
-                child:
-                    (form.pickedImage == null)
-                        ? Text("Add a photo")
-                        : Text("Change photo"),
+                  SizedBox(height: 8),
+
+                  // Photo section
+                  FakeBlur(
+                    borderRadius: BorderRadius.zero,
+                    overlay: photoColors.secondaryColor.withAlpha(200),
+                    padding: EdgeInsets.fromLTRB(8, 8, 8, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SectionTitleText("photo", color: photoColors.textColor),
+
+                        if (form.pickedImage != null)
+                          Stack(
+                            alignment: Alignment.topRight,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => FullscreenImagePage(
+                                            imagePath: form.pickedImage!.path,
+                                          ),
+                                    ),
+                                  );
+                                },
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.file(
+                                    File(form.pickedImage!.path),
+                                    width: double.infinity,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: 4,
+                                right: 4,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    _photoNotesController.clear();
+                                    notifier.updatePhotoDate(DateTime.now());
+                                    notifier.updatePickedImage(null);
+                                  },
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.black54,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Padding(
+                                      padding: EdgeInsets.all(4.0),
+                                      child: Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 24,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: photoColors.primaryColor,
+                              foregroundColor: Colors.white,
+                            ),
+                            onPressed: () async {
+                              await ImageSourceSheet.show(
+                                context,
+                                onImageSelected: (image, date) {
+                                  if (image != null) {
+                                    final notifier =
+                                        plantFormProvider(widget.form).notifier;
+                                    ref.read(notifier).updatePickedImage(image);
+                                    ref
+                                        .read(notifier)
+                                        .updatePhotoDate(
+                                          date ?? DateTime.now(),
+                                        );
+                                  }
+                                },
+                              );
+                            },
+                            child:
+                                (form.pickedImage == null)
+                                    ? Text("add a photo")
+                                    : Text("change photo"),
+                          ),
+                        ),
+                        if (form.pickedImage != null) ...[
+                          const SizedBox(height: 8),
+                          DateCard(
+                            colors: photoColors,
+                            titleText: "photo date",
+                            onTap: () async {
+                              await _pickDate(
+                                context: context,
+                                initialDate: form.photoDate,
+                                onPicked: (pickedPhoto) {
+                                  notifier.updatePhotoDate(pickedPhoto);
+                                },
+                              );
+                            },
+                            dateText:
+                                "${form.photoDate.month}/${form.photoDate.day}/${form.photoDate.year}",
+                          ),
+                          ThemedTextFormField(
+                            controller: _photoNotesController,
+                            colorScheme: photoColors,
+                            label: "about this photo",
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ]),
               ),
-              const SizedBox(height: 16),
-              if (form.pickedImage != null) ...[
-                Text("Photo Date"),
-                ElevatedButton.icon(
-                  onPressed:
-                      () => _pickDate(
-                        context: context,
-                        initialDate: form.photoDate,
-                        onPicked: (pickedPhoto) {
-                          notifier.updatePhotoDate(pickedPhoto);
-                        },
-                      ),
-                  icon: Icon(Icons.calendar_month),
-                  label: Text(
-                    "${form.photoDate.month}/${form.photoDate.day}/${form.photoDate.year}",
-                  ),
-                ),
-                TextField(
-                  controller: _photoNotesController,
-                  decoration: const InputDecoration(
-                    labelText: "About this photo",
-                  ),
-                  maxLines: null,
-                ),
-              ],
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.close),
-                    label: const Text("Cancel"),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.check),
-                    label: const Text("Submit"),
-                    onPressed: () {
-                      _handleSubmit(isAdd);
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
+            ),
+
+            StickyBottomButtons(
+              onSubmit: () => _handleSubmit(isAdd),
+              onCancel: () => Navigator.pop(context),
+            ),
+          ],
         ),
       ),
     );

@@ -28,7 +28,6 @@ class PlantAppBar extends ConsumerWidget implements PreferredSizeWidget {
     return primaryPhotoAsync.when(
       data: (photo) {
         final backgroundPhoto = photo;
-
         return AppBar(
           backgroundColor:
               backgroundPhoto != null
@@ -93,7 +92,7 @@ class PlantAppBar extends ConsumerWidget implements PreferredSizeWidget {
                   child: plantAsync.when(
                     data:
                         (plant) => Text(
-                          plant == null ? "View Plant" : plant.plant.name,
+                          plant == null ? "view plant" : plant.plant.name,
                           style: Theme.of(
                             context,
                           ).appBarTheme.titleTextStyle!.copyWith(
@@ -101,14 +100,10 @@ class PlantAppBar extends ConsumerWidget implements PreferredSizeWidget {
                                 backgroundPhoto != null ? getShadows() : null,
                           ),
                         ),
-                    loading:
-                        () => const Text(
-                          'Loading...',
-                          style: TextStyle(color: Colors.white, fontSize: 22),
-                        ),
+                    loading: () => SizedBox.shrink(),
                     error:
                         (e, st) => const Text(
-                          'Error',
+                          'view plant',
                           style: TextStyle(color: Colors.white, fontSize: 22),
                         ),
                   ),
@@ -121,15 +116,18 @@ class PlantAppBar extends ConsumerWidget implements PreferredSizeWidget {
       },
       loading:
           () => AppBar(
-            title: const Text('Loading...'),
+            centerTitle: true,
+            title: CircularProgressIndicator(color: AppColors.secondaryBlue),
             toolbarHeight: kToolbarHeight + 120,
-            backgroundColor: Theme.of(context).primaryColor,
+            backgroundColor: AppColors.primaryBlue,
           ),
       error:
           (_, __) => AppBar(
-            title: const Text('Error'),
+            title: const Text(
+              'error loading photo',
+              style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+            ),
             toolbarHeight: kToolbarHeight + 120,
-            backgroundColor: Theme.of(context).primaryColor,
           ),
     );
   }

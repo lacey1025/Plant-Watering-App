@@ -95,7 +95,6 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
                             bottomLeft: Radius.circular(16),
                             bottomRight: Radius.circular(16),
                           ),
-                          // color: AppColors.secondaryGreen,
                           child: TabBarView(
                             controller: _tabController,
                             children: [
@@ -109,11 +108,20 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
                                           eventType: EventType.watering,
                                         ),
                                 loading:
-                                    () => const Center(
-                                      child: CircularProgressIndicator(),
+                                    () => Center(
+                                      child: CircularProgressIndicator(
+                                        color: AppColors.primaryGreen,
+                                      ),
                                     ),
                                 error:
-                                    (e, st) => Center(child: Text('Error: $e')),
+                                    (e, st) => Center(
+                                      child: Text(
+                                        'error: error loading events: $e',
+                                        style: TextStyle(
+                                          color: AppColors.darkTextGreen,
+                                        ),
+                                      ),
+                                    ),
                               ),
                               repotAsync.when(
                                 data:
@@ -124,11 +132,20 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
                                       eventType: EventType.repot,
                                     ),
                                 loading:
-                                    () => const Center(
-                                      child: CircularProgressIndicator(),
+                                    () => Center(
+                                      child: CircularProgressIndicator(
+                                        color: AppColors.primaryGreen,
+                                      ),
                                     ),
                                 error:
-                                    (e, st) => Center(child: Text('Error: $e')),
+                                    (e, st) => Center(
+                                      child: Text(
+                                        'error: error loading events: $e',
+                                        style: TextStyle(
+                                          color: AppColors.darkTextGreen,
+                                        ),
+                                      ),
+                                    ),
                               ),
                               pesticideAsync.when(
                                 data:
@@ -139,11 +156,20 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
                                       eventType: EventType.pesticide,
                                     ),
                                 loading:
-                                    () => const Center(
-                                      child: CircularProgressIndicator(),
+                                    () => Center(
+                                      child: CircularProgressIndicator(
+                                        color: AppColors.primaryGreen,
+                                      ),
                                     ),
                                 error:
-                                    (e, st) => Center(child: Text('Error: $e')),
+                                    (e, st) => Center(
+                                      child: Text(
+                                        'error: error loading events: $e',
+                                        style: TextStyle(
+                                          color: AppColors.darkTextGreen,
+                                        ),
+                                      ),
+                                    ),
                               ),
                             ],
                           ),
@@ -156,14 +182,26 @@ class _ViewPlantState extends ConsumerState<ViewPlant>
 
               // Bottom buttons
               Padding(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
                 child: BottomButtons(plant: plant),
               ),
             ],
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('Error: $e')),
+        loading:
+            () => Center(
+              child: CircularProgressIndicator(color: AppColors.darkTextBlue),
+            ),
+        error:
+            (e, st) => Container(
+              color: Colors.white70,
+              child: Center(
+                child: Text(
+                  'error: error loading plant info: $e',
+                  style: TextStyle(color: AppColors.darkTextBlue),
+                ),
+              ),
+            ),
       ),
     );
   }

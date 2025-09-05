@@ -9,33 +9,28 @@ class BannerWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = plant.wateringStatus;
-    Color? color;
-    Color? textColor;
+    SelectionColorScheme colors;
     switch (status) {
       case WateringStatus.red:
-        color = AppColors.primaryPink;
-        textColor = AppColors.lightTextPink;
+        colors = SelectionColorScheme.pink;
       case WateringStatus.green:
-        color = AppColors.primaryGreen;
-        textColor = AppColors.lightTextGreen;
+        colors = SelectionColorScheme.green;
       case WateringStatus.yellow:
-        color = AppColors.primaryYellow;
-        textColor = AppColors.lightTextYellow;
+        colors = SelectionColorScheme.yellow;
       default:
-        color = Colors.white;
-        textColor = AppColors.darkTextBlue;
+        colors = SelectionColorScheme.blue;
     }
 
     return Container(
       width: double.infinity,
-      color: color,
+      color: colors.primaryColor,
       padding: const EdgeInsets.all(8),
       child: Text(
         plant.daysUntilDueStatus(),
         textAlign: TextAlign.center,
         style: Theme.of(
           context,
-        ).textTheme.bodyMedium?.copyWith(color: textColor),
+        ).textTheme.bodyMedium?.copyWith(color: colors.selectedTextColor),
       ),
     );
   }

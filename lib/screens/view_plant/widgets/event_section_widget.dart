@@ -136,7 +136,7 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
             ).textTheme.titleMedium?.copyWith(color: AppColors.darkTextGreen),
           ),
         ),
-        if (widget.events.isNotEmpty) Divider(),
+        if (widget.events.isNotEmpty) Divider(color: AppColors.primaryGreen),
 
         // events list
         Expanded(
@@ -244,7 +244,6 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
                                 color: Color.fromRGBO(128, 176, 139, 1),
                                 child: Column(
                                   children: [
-                                    // Content section with better spacing and organization
                                     Padding(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 16,
@@ -253,7 +252,6 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          // Replace the Consumer section with this updated version:
                                           Consumer(
                                             builder: (context, widgetRef, _) {
                                               final accessoriesAsync = widgetRef
@@ -464,7 +462,7 @@ class _EventSectionState<T> extends ConsumerState<EventSection<T>> {
                                 ),
                               ),
                             if (index != widget.events.length - 1)
-                              const Divider(height: 1),
+                              Divider(color: AppColors.primaryGreen),
                           ],
                         ),
                       );

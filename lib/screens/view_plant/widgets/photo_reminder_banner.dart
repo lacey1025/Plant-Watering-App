@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:plant_application/notifier_providers/photos_provider.dart';
 import 'package:plant_application/screens/add_photo/add_photo_screen.dart';
-import 'package:plant_application/screens/add_plant/widgets/image_source_sheet.dart';
+import 'package:plant_application/screens/shared/image_source_sheet.dart';
 import 'package:plant_application/theme.dart';
 
 class PhotoReminderBanner extends ConsumerWidget {
@@ -26,44 +25,47 @@ class PhotoReminderBanner extends ConsumerWidget {
     return photosAsync.when(
       data: (photos) {
         final hasRecentPhoto = photoNotifier.hasRecentPhoto(dateAdded);
-
         if (!hasRecentPhoto) {
-          return MaterialBanner(
-            backgroundColor: AppColors.lightTextPink,
-            padding: EdgeInsets.only(left: 16, right: 16, top: 16),
-            minActionBarHeight: 32,
-            content: Text(
-              "Happy 6-monthiversary to your plant! Take a photo to celebrate!",
-              // textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: AppColors.darkTextPink),
+          return Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: MaterialBanner(
+              backgroundColor: AppColors.lightTextPink,
+              padding: EdgeInsets.only(left: 16, right: 16, top: 16),
+              minActionBarHeight: 32,
+              content: Text(
+                "Happy 6-monthiversary to your plant! Take a photo to celebrate!",
+                // textAlign: TextAlign.center,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.darkTextPink),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    await _showImageSourceActionSheet(context, ref);
+                  },
+                  child: Text(
+                    'Take Photo',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.darkTextPink,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    ref
+                        .read(photoBannerVisibleProvider(plantId).notifier)
+                        .state = false;
+                  },
+                  child: Text(
+                    'Dismiss',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.darkTextPink,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  await _showImageSourceActionSheet(context, ref);
-                },
-                child: Text(
-                  'Take Photo',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.darkTextPink,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  ref.read(photoBannerVisibleProvider(plantId).notifier).state =
-                      false;
-                },
-                child: Text(
-                  'Dismiss',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.darkTextPink,
-                  ),
-                ),
-              ),
-            ],
           );
         }
 
@@ -78,26 +80,24 @@ class PhotoReminderBanner extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) async {
-    XFile? pickedImage = await showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.secondaryBlue,
-      builder:
-          (context) => ImageSourceSheet(
-            onImageSelected: (image) {
-              Navigator.of(context).pop(image);
-            },
-          ),
+    await ImageSourceSheet.show(
+      context,
+      onImageSelected: (image, date) {
+        if (image != null && context.mounted) {
+          ref.read(photoBannerVisibleProvider(plantId).notifier).state = false;
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder:
+                  (_) => AddPhotoScreen(
+                    plantId: plantId,
+                    initialImage: image,
+                    initialDate: date,
+                  ),
+            ),
+          );
+        }
+      },
     );
-    if (pickedImage != null && context.mounted) {
-      // ref.read(photoBannerVisibleProvider(plantId).notifier).state = false;
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder:
-              (_) =>
-                  AddPhotoScreen(plantId: plantId, initialImage: pickedImage),
-        ),
-      );
-    }
   }
 }
 

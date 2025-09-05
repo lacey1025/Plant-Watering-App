@@ -2,12 +2,13 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:plant_application/database/plant_app_db.dart';
 import 'package:plant_application/notifier_providers/photos_provider.dart';
 import 'package:plant_application/notifier_providers/primary_photo_provider.dart';
 import 'package:plant_application/screens/add_photo/add_photo_screen.dart';
-import 'package:plant_application/screens/add_plant/widgets/image_source_sheet.dart';
+import 'package:plant_application/screens/shared/image_source_sheet.dart';
+import 'package:plant_application/theme.dart';
 import 'package:plant_application/utils/shadows.dart';
 import 'package:plant_application/utils/datetime_extensions.dart';
 
@@ -170,10 +171,11 @@ class _PhotoCarouselDialogState extends ConsumerState<PhotoCarouselDialog> {
 
                       child: Text(
                         currentPhoto.notes!,
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           color: Colors.white,
                           fontSize: 16,
                           shadows: shadows,
+                          fontWeight: FontWeight.w400,
                         ),
                         textAlign: TextAlign.center,
                         softWrap: true, // Add this
@@ -190,7 +192,7 @@ class _PhotoCarouselDialogState extends ConsumerState<PhotoCarouselDialog> {
                 child: AnimatedButton(
                   isVisible: !_isExpanded,
                   child: Container(
-                    padding: EdgeInsets.fromLTRB(16, 48, 16, 64),
+                    padding: EdgeInsets.only(top: kToolbarHeight + 4),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
@@ -208,7 +210,7 @@ class _PhotoCarouselDialogState extends ConsumerState<PhotoCarouselDialog> {
                         children: [
                           PopupMenuButton<String>(
                             icon: Icon(
-                              Icons.more_vert, // Horizontal dots instead
+                              Icons.more_vert,
                               color: Colors.white,
                               size: 30,
                               shadows: shadows,
@@ -243,29 +245,23 @@ class _PhotoCarouselDialogState extends ConsumerState<PhotoCarouselDialog> {
                                   );
                                   break;
                                 case 'add':
-                                  XFile? pickedImage =
-                                      await showModalBottomSheet(
-                                        context: context,
-                                        builder:
-                                            (context) => ImageSourceSheet(
-                                              onImageSelected: (image) {
-                                                Navigator.of(
-                                                  context,
-                                                ).pop(image);
-                                              },
-                                            ),
-                                      );
-                                  if (pickedImage != null && context.mounted) {
-                                    Navigator.of(context).pushReplacement(
-                                      MaterialPageRoute(
-                                        builder:
-                                            (_) => AddPhotoScreen(
-                                              plantId: widget.plantId,
-                                              initialImage: pickedImage,
-                                            ),
-                                      ),
-                                    );
-                                  }
+                                  await ImageSourceSheet.show(
+                                    context,
+                                    onImageSelected: (image, date) {
+                                      if (image != null && context.mounted) {
+                                        Navigator.of(context).pushReplacement(
+                                          MaterialPageRoute(
+                                            builder:
+                                                (_) => AddPhotoScreen(
+                                                  plantId: widget.plantId,
+                                                  initialImage: image,
+                                                  initialDate: date,
+                                                ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                  );
                                   break;
                                 case 'delete':
                                   ref
@@ -302,21 +298,6 @@ class _PhotoCarouselDialogState extends ConsumerState<PhotoCarouselDialog> {
                                         ),
                                       ),
                                     ),
-                                  const PopupMenuItem<String>(
-                                    value: 'edit',
-                                    child: ListTile(
-                                      dense: true,
-                                      contentPadding: EdgeInsets.zero,
-                                      leading: Icon(
-                                        Icons.edit,
-                                        color: Colors.white,
-                                      ),
-                                      title: Text(
-                                        'Edit',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ),
-                                  ),
                                   PopupMenuItem<String>(
                                     value: 'add',
                                     child: ListTile(
@@ -327,11 +308,27 @@ class _PhotoCarouselDialogState extends ConsumerState<PhotoCarouselDialog> {
                                         color: Colors.white,
                                       ),
                                       title: Text(
-                                        'Add Photo',
+                                        'add photo',
                                         style: TextStyle(color: Colors.white),
                                       ),
                                     ),
                                   ),
+                                  PopupMenuItem<String>(
+                                    value: 'edit',
+                                    child: ListTile(
+                                      dense: true,
+                                      contentPadding: EdgeInsets.zero,
+                                      leading: Icon(
+                                        Icons.edit,
+                                        color: Colors.white,
+                                      ),
+                                      title: Text(
+                                        'edit',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
+
                                   const PopupMenuItem<String>(
                                     value: 'delete',
                                     child: ListTile(
@@ -339,18 +336,11 @@ class _PhotoCarouselDialogState extends ConsumerState<PhotoCarouselDialog> {
                                       contentPadding: EdgeInsets.zero,
                                       leading: Icon(
                                         Icons.delete,
-                                        color: Color.fromRGBO(229, 115, 115, 1),
+                                        color: Colors.white,
                                       ),
                                       title: Text(
-                                        'Delete',
-                                        style: TextStyle(
-                                          color: Color.fromRGBO(
-                                            229,
-                                            115,
-                                            115,
-                                            1,
-                                          ),
-                                        ),
+                                        'delete',
+                                        style: TextStyle(color: Colors.white),
                                       ),
                                     ),
                                   ),
@@ -380,21 +370,23 @@ class _PhotoCarouselDialogState extends ConsumerState<PhotoCarouselDialog> {
       },
       loading:
           () => Scaffold(
+            backgroundColor: Colors.black,
             body: Center(
               child: SizedBox(
-                height: 200,
-                width: 200,
-                child: CircularProgressIndicator(),
+                height: 100,
+                width: 100,
+                child: CircularProgressIndicator(color: AppColors.primaryBlue),
               ),
             ),
           ),
       error:
           (e, st) => Scaffold(
+            backgroundColor: Colors.black,
             body: Center(
               child: SizedBox(
                 height: 200,
                 width: 200,
-                child: Text("Error loading photos"),
+                child: Text("error loading photos: $e"),
               ),
             ),
           ),
@@ -422,29 +414,4 @@ class AnimatedButton extends StatelessWidget {
       child: IgnorePointer(ignoring: !isVisible, child: child),
     );
   }
-} // class AnimatedButton extends StatelessWidget {
-//   final bool isVisible;
-//   final Widget child;
-//   final Duration duration;
-
-//   const AnimatedButton({
-//     required this.isVisible,
-//     required this.child,
-//     this.duration = const Duration(milliseconds: 200),
-//     super.key,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return TweenAnimationBuilder<double>(
-//       tween: Tween(begin: isVisible ? 0.0 : 1.0, end: isVisible ? 1.0 : 0.0),
-//       duration: duration,
-//       builder: (context, value, child) {
-//         return Opacity(
-//           opacity: value,
-//           child: IgnorePointer(ignoring: value < 0.1, child: this.child),
-//         );
-//       },
-//     );
-//   }
-// }
+}

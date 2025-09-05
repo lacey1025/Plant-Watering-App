@@ -21,9 +21,7 @@ class DeleteDialog extends StatelessWidget {
         ),
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(true),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryPink,
-          ),
+          style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
           child: const Text('delete'),
         ),
       ],
